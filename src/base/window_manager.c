@@ -846,6 +846,16 @@ static ret_t window_manager_on_destroy(widget_t* widget) {
   return RET_OK;
 }
 
+static ret_t window_manager_on_layout_children(widget_t* widget) {
+  return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
+
+  WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
+  window_manager_layout_child(widget, iter);
+  WIDGET_FOR_EACH_CHILD_END();
+
+  return RET_OK;
+}
+
 static const widget_vtable_t s_window_manager_vtable = {
     .size = sizeof(window_manager_t),
     .is_window_manager = TRUE,
@@ -853,6 +863,7 @@ static const widget_vtable_t s_window_manager_vtable = {
     .set_prop = window_manager_set_prop,
     .get_prop = window_manager_get_prop,
     .invalidate = window_manager_invalidate,
+    .on_layout_children = window_manager_on_layout_children,
     .on_paint_children = window_manager_on_paint_children,
     .on_remove_child = wm_on_remove_child,
     .find_target = window_manager_find_target,
@@ -927,16 +938,6 @@ static ret_t window_manager_layout_child(widget_t* widget, widget_t* window) {
   return RET_OK;
 }
 
-ret_t window_manager_layout_children(widget_t* widget) {
-  return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
-
-  WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
-  window_manager_layout_child(widget, iter);
-  WIDGET_FOR_EACH_CHILD_END();
-
-  return RET_OK;
-}
-
 ret_t window_manager_resize(widget_t* widget, wh_t w, wh_t h) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL, RET_BAD_PARAMS);
@@ -948,7 +949,7 @@ ret_t window_manager_resize(widget_t* widget, wh_t w, wh_t h) {
   wm->last_dirty_rect = wm->dirty_rect;
   widget_move_resize(widget, 0, 0, w, h);
 
-  return window_manager_layout_children(widget);
+  return widget_layout_children(widget);
 }
 
 ret_t window_manager_dispatch_input_event(widget_t* widget, event_t* e) {

@@ -63,7 +63,7 @@ ret_t window_set_fullscreen(widget_t* widget, bool_t fullscreen) {
 
   if (window->fullscreen != fullscreen) {
     window->fullscreen = fullscreen;
-    window_manager_layout_children(window_manager());
+    widget_layout_children(widget->parent);
     widget_invalidate_force(widget, NULL);
   }
 

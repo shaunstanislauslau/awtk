@@ -281,9 +281,6 @@ ret_t window_manager_set_dialog_highlighter(widget_t* widget, dialog_highlighter
 /*for compatible*/
 #define window_manager_request_close_top_window window_manager_back
 
-/*public for window*/
-ret_t window_manager_layout_children(widget_t* widget);
-
 /*public for window animator*/
 ret_t window_manager_snap_curr_window(widget_t* widget, widget_t* curr_win, bitmap_t* img,
                                       framebuffer_object_t* fbo, bool_t auto_rotate);
