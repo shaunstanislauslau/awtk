@@ -181,8 +181,6 @@ ret_t tk_init(wh_t w, wh_t h, app_type_t app_type, const char* app_name, const c
   loop = main_loop_init(w, h);
   return_value_if_fail(loop != NULL, RET_FAIL);
 
-  WINDOW_MANAGER(window_manager())->canvas = &((loop)->canvas);
-
   return RET_OK;
 }
 
@@ -295,22 +293,13 @@ ret_t tk_set_lcd_orientation(lcd_orientation_t orientation) {
 }
 
 int32_t tk_get_pointer_x(void) {
-  window_manager_t* wm = WINDOW_MANAGER(window_manager());
-  return_value_if_fail(wm != NULL, 0);
-
-  return wm->input_device_status.last_x;
+  return window_manager_get_pointer_x(window_manager());
 }
 
 int32_t tk_get_pointer_y(void) {
-  window_manager_t* wm = WINDOW_MANAGER(window_manager());
-  return_value_if_fail(wm != NULL, 0);
-
-  return wm->input_device_status.last_y;
+  return window_manager_get_pointer_y(window_manager());
 }
 
 bool_t tk_is_pointer_pressed(void) {
-  window_manager_t* wm = WINDOW_MANAGER(window_manager());
-  return_value_if_fail(wm != NULL, 0);
-
-  return wm->input_device_status.pressed;
+  return window_manager_get_pointer_pressed(window_manager());
 }

@@ -60,6 +60,12 @@ BEGIN_C_DECLS
 #define WIDGET_PROP_H "h"
 
 /**
+ * @const WIDGET_PROP_CANVAS
+ * Canvas。
+ */
+#define WIDGET_PROP_CANVAS "canvas"
+
+/**
  * @const WIDGET_PROP_HIGHLIGHT
  * dialog highlight。
  */

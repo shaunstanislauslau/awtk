@@ -33,6 +33,7 @@
 #include "base/main_loop.h"
 #include "base/widget_pool.h"
 #include "base/system_info.h"
+#include "base/window_manager.h"
 #include "base/widget_vtable.h"
 #include "base/style_mutable.h"
 #include "base/style_factory.h"
@@ -1962,7 +1963,7 @@ widget_t* widget_get_window_manager(widget_t* widget) {
     iter = iter->parent;
   }
 
-  return iter;
+  return window_manager();
 }
 
 static ret_t widget_remove_timer_on_destroy(void* ctx, event_t* e) {
@@ -2933,4 +2934,18 @@ ret_t widget_set_style_str(widget_t* widget, const char* state_and_name, const c
 
   value_set_str(&v, value);
   return widget_set_style(widget, state_and_name, &v);
+}
+
+canvas_t* widget_get_canvas(widget_t* widget) {
+  canvas_t* c = NULL;
+  widget_t* win = widget_get_window(widget);
+  return_value_if_fail(widget != NULL, NULL);
+
+  c = (canvas_t*)widget_get_prop_pointer(win, WIDGET_PROP_CANVAS);
+  if (c == NULL) {
+    widget_t* wm = window_manager();
+    c = (canvas_t*)widget_get_prop_pointer(wm, WIDGET_PROP_CANVAS);
+  }
+
+  return c;
 }

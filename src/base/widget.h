@@ -1946,6 +1946,14 @@ ret_t widget_set_style_str(widget_t* widget, const char* state_and_name, const c
  */
 ret_t widget_set_style_color(widget_t* widget, const char* state_and_name, uint32_t value);
 
+/**
+ * @method widget_get_canvas
+ * 获取canvas对象。
+ *
+ * @return {canvas_t*} 返回canvas对象。
+ */
+canvas_t* widget_get_canvas(widget_t* widget);
+
 /*虚函数的包装*/
 ret_t widget_on_paint(widget_t* widget, canvas_t* c);
 ret_t widget_on_keydown(widget_t* widget, key_event_t* e);
