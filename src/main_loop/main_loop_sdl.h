@@ -1,7 +1,7 @@
 ﻿/**
- * File:   main_loop_sdl_gpu.h
+ * File:   main_loop_sdl.h
  * Author: AWTK Develop Team
- * Brief:  nanovg implemented main_loop interface
+ * Brief:  sdl2 implemented main_loop interface
  *
  * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
@@ -15,12 +15,12 @@
 /**
  * history:
  * ================================================================
- * 2018-04-11 li xianjing <xianjimli@hotmail.com> created
+ * 2018-01-13 li xianjing <xianjimli@hotmail.com> created
  *
  */
 
-#ifndef TK_MAIN_LOOP_SDL_GPU_H
-#define TK_MAIN_LOOP_SDL_GPU_H
+#ifndef TK_MAIN_LOOP_SDL_H
+#define TK_MAIN_LOOP_SDL_H
 
 #include "base/main_loop.h"
 
@@ -30,4 +30,4 @@ main_loop_t* main_loop_init(int w, int h);
 
 END_C_DECLS
 
-#endif /*TK_MAIN_LOOP_SDL_GPU_H*/
+#endif /*TK_MAIN_LOOP_SDL_H*/

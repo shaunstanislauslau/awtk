@@ -30,8 +30,8 @@
 #include "base/locale_info.h"
 #include "base/system_info.h"
 #include "base/image_manager.h"
-#include "base/window_manager_default.h"
 #include "base/dialog_highlighter_factory.h"
+#include "window_manager/window_manager_default.h"
 
 static ret_t window_manager_invalidate(widget_t* widget, rect_t* r);
 static widget_t* window_manager_init(window_manager_t* wm);
@@ -696,9 +696,10 @@ static ret_t window_manager_update_fps(widget_t* widget) {
   return RET_OK;
 }
 
-static ret_t window_manager_default_paint(widget_t* widget, canvas_t* c) {
+static ret_t window_manager_default_paint(widget_t* widget) {
   ret_t ret = RET_OK;
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
+  canvas_t* c = native_window_get_canvas(wm->native_window);
   return_value_if_fail(wm != NULL && c != NULL, RET_BAD_PARAMS);
 
   wm->canvas = c;
@@ -802,7 +803,7 @@ static ret_t window_manager_on_paint_children(widget_t* widget, canvas_t* c) {
   return RET_OK;
 }
 
-static ret_t wm_on_remove_child(widget_t* widget, widget_t* window) {
+static ret_t window_manager_on_remove_child(widget_t* widget, widget_t* window) {
   widget_t* top = window_manager_get_top_main_window(widget);
 
   if (top != NULL) {
@@ -845,7 +846,7 @@ static ret_t window_manager_set_prop(widget_t* widget, const char* name, const v
 
 static ret_t window_manager_on_destroy(widget_t* widget) {
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
-
+  object_unref(OBJECT(wm->native_window));
   TKMEM_FREE(wm->cursor);
 
   return RET_OK;
@@ -863,6 +864,7 @@ static ret_t window_manager_on_layout_children(widget_t* widget) {
 
 static ret_t window_manager_default_back(widget_t* widget);
 static ret_t window_manager_default_resize(widget_t* widget, wh_t w, wh_t h);
+static ret_t window_manager_default_post_init(widget_t* widget, wh_t w, wh_t h);
 static ret_t window_manager_default_back_to_home(widget_t* widget);
 static ret_t window_manager_default_set_cursor(widget_t* widget, const char* cursor);
 static ret_t window_manager_default_set_show_fps(widget_t* widget, bool_t show_fps);
@@ -898,6 +900,7 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .back = window_manager_default_back,
     .paint = window_manager_default_paint,
     .resize = window_manager_default_resize,
+    .post_init = window_manager_default_post_init,
     .set_cursor = window_manager_default_set_cursor,
     .open_window = window_manager_default_open_window,
     .get_pointer = window_manager_default_get_pointer,
@@ -911,16 +914,41 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .dispatch_input_event = window_manager_default_dispatch_input_event,
     .set_screen_saver_time = window_manager_default_set_screen_saver_time};
 
+static ret_t window_manager_on_event(widget_t* widget, event_t* e) {
+  if (e->type == EVT_ORIENTATION_WILL_CHANGED) {
+    orientation_event_t* evt = orientation_event_cast(e);
+    lcd_orientation_t orientation = evt->orientation;
+    window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
+    lcd_t* lcd = native_window_get_canvas(wm->native_window)->lcd;
+
+    wh_t w = wm->lcd_w;
+    wh_t h = wm->lcd_h;
+    if (orientation == LCD_ORIENTATION_90 || orientation == LCD_ORIENTATION_270) {
+      w = wm->lcd_w;
+      h = wm->lcd_h;
+    }
+
+    lcd_resize(lcd, w, h, 0);
+    window_manager_resize(window_manager(), w, h);
+    e->type = EVT_ORIENTATION_CHANGED;
+
+    widget_dispatch(widget, e);
+  }
+
+  return RET_OK;
+}
+
 static const widget_vtable_t s_window_manager_vtable = {
     .size = sizeof(window_manager_t),
     .is_window_manager = TRUE,
     .type = WIDGET_TYPE_WINDOW_MANAGER,
     .set_prop = window_manager_set_prop,
     .get_prop = window_manager_get_prop,
+    .on_event = window_manager_on_event,
     .invalidate = window_manager_invalidate,
     .on_layout_children = window_manager_on_layout_children,
     .on_paint_children = window_manager_on_paint_children,
-    .on_remove_child = wm_on_remove_child,
+    .on_remove_child = window_manager_on_remove_child,
     .find_target = window_manager_find_target,
     .on_destroy = window_manager_on_destroy};
 
@@ -1005,6 +1033,18 @@ static ret_t window_manager_default_resize(widget_t* widget, wh_t w, wh_t h) {
   widget_move_resize(widget, 0, 0, w, h);
 
   return widget_layout_children(widget);
+}
+
+static ret_t window_manager_default_post_init(widget_t* widget, wh_t w, wh_t h) {
+  window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
+  return_value_if_fail(wm != NULL, RET_BAD_PARAMS);
+
+  wm->lcd_w = w;
+  wm->lcd_h = h;
+  wm->native_window = native_window_create(widget);
+  window_manager_default_resize(widget, w, h);
+
+  return RET_OK;
 }
 
 static ret_t window_manager_default_dispatch_input_event(widget_t* widget, event_t* e) {

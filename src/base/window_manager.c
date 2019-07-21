@@ -76,6 +76,14 @@ ret_t window_manager_resize(widget_t* widget, wh_t w, wh_t h) {
   return wm->vt->resize(widget, w, h);
 }
 
+ret_t window_manager_post_init(widget_t* widget, wh_t w, wh_t h) {
+  window_manager_t* wm = WINDOW_MANAGER(widget);
+  return_value_if_fail(wm != NULL && wm->vt != NULL, RET_BAD_PARAMS);
+  return_value_if_fail(wm->vt->post_init != NULL, RET_BAD_PARAMS);
+
+  return wm->vt->post_init(widget, w, h);
+}
+
 ret_t window_manager_open_window(widget_t* widget, widget_t* window) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(window != NULL, RET_BAD_PARAMS);
@@ -103,12 +111,12 @@ ret_t window_manager_close_window_force(widget_t* widget, widget_t* window) {
   return wm->vt->close_window_force(widget, window);
 }
 
-ret_t window_manager_paint(widget_t* widget, canvas_t* c) {
+ret_t window_manager_paint(widget_t* widget) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL && wm->vt != NULL, RET_BAD_PARAMS);
   return_value_if_fail(wm->vt->paint != NULL, RET_BAD_PARAMS);
 
-  return wm->vt->paint(widget, c);
+  return wm->vt->paint(widget);
 }
 
 ret_t window_manager_dispatch_input_event(widget_t* widget, event_t* e) {

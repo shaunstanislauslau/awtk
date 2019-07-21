@@ -22,6 +22,7 @@
 #ifndef TK_WINDOW_MANAGER_DEFAULT_H
 #define TK_WINDOW_MANAGER_DEFAULT_H
 
+#include "base/native_window.h"
 #include "base/window_manager.h"
 
 BEGIN_C_DECLS
@@ -61,7 +62,11 @@ typedef struct _window_manager_default_t {
   uint32_t screen_saver_time;
 
   widget_t* prev_win;
+  native_window_t* native_window;
   dialog_highlighter_t* dialog_highlighter;
+
+  int32_t lcd_w;
+  int32_t lcd_h;
 } window_manager_default_t;
 
 /**

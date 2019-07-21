@@ -274,19 +274,11 @@ ret_t tk_set_lcd_orientation(lcd_orientation_t orientation) {
                        RET_NOT_IMPL);
 
   if (info->lcd_orientation != orientation) {
-    wh_t w = info->lcd_w;
-    wh_t h = info->lcd_h;
-    lcd_t* lcd = loop->canvas.lcd;
+    orientation_event_t e;
+    orientation_event_init(&e, EVT_ORIENTATION_WILL_CHANGED, NULL, orientation);
+    widget_dispatch(window_manager(), (event_t*)&e);
 
     system_info_set_lcd_orientation(info, orientation);
-    if (orientation == LCD_ORIENTATION_90 || orientation == LCD_ORIENTATION_270) {
-      w = info->lcd_h;
-      h = info->lcd_w;
-    }
-
-    lcd_resize(lcd, w, h, 0);
-
-    window_manager_resize(window_manager(), w, h);
   }
 
   return RET_OK;

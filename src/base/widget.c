@@ -2537,7 +2537,7 @@ bool_t widget_equal(widget_t* widget, widget_t* other) {
 }
 
 float_t widget_measure_text(widget_t* widget, const wchar_t* text) {
-  canvas_t* c = &(main_loop()->canvas);
+  canvas_t* c = widget_get_canvas(widget);
   return_value_if_fail(widget != NULL && text != NULL && c != NULL, 0);
 
   widget_prepare_text_style(widget, c);

@@ -24,8 +24,8 @@
 #endif /*AWTK_WEB*/
 
 #include "base/window_animator.h"
-#include "base/window_manager_default.h"
 #include "base/dialog_highlighter_factory.h"
+#include "window_manager/window_manager_default.h"
 
 #include "window_animators/window_animator_common.h"
 
