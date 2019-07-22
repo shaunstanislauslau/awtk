@@ -54,3 +54,41 @@ canvas_t* native_window_get_canvas(native_window_t* win) {
 
   return NULL;
 }
+
+ret_t native_window_update_last_dirty_rect(native_window_t* win) {
+  return_value_if_fail(win != NULL, RET_BAD_PARAMS);
+
+  win->last_dirty_rect = win->dirty_rect;
+
+  return RET_OK;
+}
+
+rect_t native_window_calc_dirty_rect(native_window_t* win) {
+  rect_t* ldr = NULL;
+  rect_t r = rect_init(0, 0, 0, 0);
+  return_value_if_fail(win != NULL, r);
+
+  r = win->dirty_rect;
+  ldr = &(win->last_dirty_rect);
+  rect_merge(&r, ldr);
+
+  return rect_fix(&r, win->w, win->h);
+}
+
+ret_t native_window_invalidate(native_window_t* win, rect_t* r) {
+  rect_t* dr = NULL;
+  return_value_if_fail(win != NULL, RET_BAD_PARAMS);
+
+  dr = &(win->dirty_rect);
+
+  if(r != NULL) {
+    rect_merge(dr, r);
+  } else {
+    dr->x = 0;
+    dr->y = 0;
+    dr->w = win->w;
+    dr->h = win->h;
+  }
+
+  return RET_OK;
+}

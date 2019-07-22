@@ -36,17 +36,31 @@ static native_window_t* s_shared_win = NULL;
 #define NATIVE_WINDOW_SDL(win) ((native_window_sdl_t*)(win))
 
 static ret_t native_window_sdl_move(native_window_t* win, xy_t x, xy_t y) {
+  int oldx = 0;
+  int oldy = 0;
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
 
-  SDL_SetWindowPosition(sdl->window, x, y);
+  win->x = x;
+  win->y = y;
+  SDL_GetWindowPosition(sdl->window, &oldx, &oldy);
+  if(oldx != x || oldy != y) {
+    SDL_SetWindowPosition(sdl->window, x, y);
+  }
 
   return RET_OK;
 }
 
 static ret_t native_window_sdl_resize(native_window_t* win, wh_t w, wh_t h) {
+  int oldw = 0;
+  int oldh = 0;
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
 
-  SDL_SetWindowSize(sdl->window, w, h);
+  win->w = w;
+  win->h = h;
+  SDL_GetWindowSize(sdl->window, &oldw, &oldh);
+  if(w != oldw || h != oldh) {
+    SDL_SetWindowSize(sdl->window, w, h);
+  }
 
   return RET_OK;
 }
@@ -125,6 +139,10 @@ static native_window_t* native_window_create_internal(const char* title, int32_t
       SDL_CreateRenderer(sdl->window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 #endif /*WITH_NANOVG_SOFT*/
 
+  win->x = x;
+  win->y = y;
+  win->w = w;
+  win->h = h;
   win->handle = sdl->window;
   win->vt = &s_native_window_vtable;
 

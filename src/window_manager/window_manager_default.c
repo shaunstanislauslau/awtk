@@ -519,13 +519,7 @@ static widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
 }
 
 static rect_t window_manager_calc_dirty_rect(window_manager_default_t* wm) {
-  rect_t r = wm->dirty_rect;
-  widget_t* widget = WIDGET(wm);
-  rect_t* ldr = &(wm->last_dirty_rect);
-
-  rect_merge(&r, ldr);
-
-  return rect_fix(&r, widget->w, widget->h);
+  return native_window_calc_dirty_rect(wm->native_window);
 }
 
 static ret_t window_manager_paint_cursor(widget_t* widget, canvas_t* c) {
@@ -568,7 +562,7 @@ static ret_t window_manager_update_cursor(widget_t* widget, int32_t x, int32_t y
 
 static ret_t window_manager_paint_normal(widget_t* widget, canvas_t* c) {
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
-  rect_t* dr = &(wm->dirty_rect);
+  rect_t* dr = &(wm->native_window->dirty_rect);
 
   window_manager_inc_fps(widget);
 
@@ -587,7 +581,7 @@ static ret_t window_manager_paint_normal(widget_t* widget, canvas_t* c) {
       window_manager_paint_cursor(widget, c);
       ENSURE(canvas_end_frame(c) == RET_OK);
       wm->last_paint_cost = time_now_ms() - start_time;
-      wm->last_dirty_rect = wm->dirty_rect;
+      native_window_update_last_dirty_rect(wm->native_window);
       /*
         log_debug("%s x=%d y=%d w=%d h=%d cost=%d\n", __FUNCTION__, (int)(r.x), (int)(r.y),
                 (int)(r.w), (int)(r.h), (int)wm->last_paint_cost);
@@ -595,7 +589,7 @@ static ret_t window_manager_paint_normal(widget_t* widget, canvas_t* c) {
     }
   }
 
-  wm->dirty_rect = rect_init(widget->w, widget->h, 0, 0);
+  wm->native_window->dirty_rect = rect_init(widget->w, widget->h, 0, 0);
 
   return RET_OK;
 }
@@ -700,9 +694,7 @@ static ret_t window_manager_default_paint(widget_t* widget) {
 
 static ret_t window_manager_invalidate(widget_t* widget, rect_t* r) {
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
-  rect_t* dr = &(wm->dirty_rect);
-
-  rect_merge(dr, r);
+  native_window_invalidate(wm->native_window, r);
 
   return RET_OK;
 }
@@ -917,15 +909,15 @@ static ret_t window_manager_layout_child(widget_t* widget, widget_t* window) {
 }
 
 static ret_t window_manager_default_resize(widget_t* widget, wh_t w, wh_t h) {
+  rect_t r = rect_init(0, 0, w, h);
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
   return_value_if_fail(wm != NULL, RET_BAD_PARAMS);
 
-  wm->dirty_rect.x = 0;
-  wm->dirty_rect.y = 0;
-  wm->dirty_rect.w = w;
-  wm->dirty_rect.h = h;
-  wm->last_dirty_rect = wm->dirty_rect;
   widget_move_resize(widget, 0, 0, w, h);
+
+  native_window_resize(wm->native_window, w, h, TRUE);
+  native_window_invalidate(wm->native_window, &r);
+  native_window_update_last_dirty_rect(wm->native_window);
 
   return widget_layout_children(widget);
 }
