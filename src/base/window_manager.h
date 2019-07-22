@@ -311,6 +311,8 @@ ret_t window_manager_back(widget_t* widget);
 ret_t window_manager_back_to_home(widget_t* widget);
 
 widget_t* window_manager_create(void);
+widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt, 
+    const window_manager_vtable_t* vt);
 
 #define WINDOW_MANAGER(widget) ((window_manager_t*)(widget))
 

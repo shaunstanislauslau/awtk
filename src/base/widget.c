@@ -2949,3 +2949,20 @@ canvas_t* widget_get_canvas(widget_t* widget) {
 
   return c;
 }
+
+bool_t widget_is_system_bar(widget_t* widget) {
+  return tk_str_eq(widget->vt->type, WIDGET_TYPE_SYSTEM_BAR);
+}
+
+bool_t widget_is_normal_window(widget_t* widget) {
+  return tk_str_eq(widget->vt->type, WIDGET_TYPE_NORMAL_WINDOW);
+}
+
+bool_t widget_is_dialog(widget_t* widget) {
+  return tk_str_eq(widget->vt->type, WIDGET_TYPE_DIALOG);
+}
+
+bool_t widget_is_popup(widget_t* widget) {
+  return tk_str_eq(widget->vt->type, WIDGET_TYPE_POPUP);
+}
+

@@ -1975,6 +1975,14 @@ const char** widget_get_persistent_props(void);
 bool_t widget_is_instance_of(widget_t* widget, const widget_vtable_t* vt);
 #define WIDGET_IS_INSTANCE_OF(widget, name) widget_is_instance_of(widget, TK_REF_VTABLE(name))
 
+bool_t widget_is_system_bar(widget_t* widget);
+
+bool_t widget_is_normal_window(widget_t* widget);
+
+bool_t widget_is_dialog(widget_t* widget);
+
+bool_t widget_is_popup(widget_t* widget);
+
 /*public for subclass*/
 TK_EXTERN_VTABLE(widget);
 
