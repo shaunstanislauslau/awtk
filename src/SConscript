@@ -5,6 +5,8 @@ BIN_DIR=os.environ['BIN_DIR'];
 LIB_DIR=os.environ['LIB_DIR'];
 NANOVG_BACKEND=os.environ['NANOVG_BACKEND'];
 VGCANVAS=os.environ['VGCANVAS'];
+NATIVE_WINDOW = os.environ['NATIVE_WINDOW'];
+MULTI_NATIVE_WINDOW = os.environ['MULTI_NATIVE_WINDOW'];
 
 sources=Glob('tkc/*.c') +\
   Glob('base/*.c') + \
@@ -22,11 +24,19 @@ sources=Glob('tkc/*.c') +\
   Glob('designer_support/*.c') + \
   Glob('widget_animators/*.c') + \
   Glob('misc/*.cpp') + \
-  Glob('window_animators/*.c') + \
-  Glob('window_manager/*.c') + \
-  Glob('native_window/*.c') + \
-  Glob('dialog_highlighters/*.c') + \
   ['awtk_global.c'];
+
+if NATIVE_WINDOW == 'sdl':
+  sources += Glob('native_window/native_window_sdl.c')
+else:
+  sources += Glob('native_window/native_window_raw.c')
+
+if MULTI_NATIVE_WINDOW == 'true':
+  sources += Glob('window_manager/window_manager_native.c')
+else:
+  sources += Glob('window_animators/*.c')
+  sources += Glob('dialog_highlighters/*.c')
+  sources += Glob('window_manager/window_manager_default.c')
 
 sources += ['main_loop/main_loop_simple.c'];
 if os.environ['LCD'] == 'SDL_GPU':

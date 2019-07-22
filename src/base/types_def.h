@@ -269,9 +269,13 @@ typedef struct _widget_animator_t widget_animator_t;
 #define TK_EXTERN_VTABLE(vt)
 #endif /*WITH_WIDGET_TYPE_CHECK*/
 
-#ifdef WITH_VGCANVAS
+#ifndef MULTI_NATIVE_WINDOW
+#ifndef WITH_WINDOW_ANIMATORS
+#if defined(WITH_VGCANVAS) 
 #define WITH_WINDOW_ANIMATORS 1
 #endif /*WITH_VGCANVAS*/
+#endif /*WITH_WINDOW_ANIMATORS*/
+#endif /*MULTI_NATIVE_WINDOW*/
 
 #ifndef TK_KEY_MOVE_FOCUS_NEXT
 #define TK_KEY_MOVE_FOCUS_NEXT TK_KEY_TAB
