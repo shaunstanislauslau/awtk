@@ -119,8 +119,23 @@ static ret_t window_manager_native_close_window(widget_t* widget, widget_t* wind
   return window_manager_close_window_force(widget, window);
 }
 
-static widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
+static widget_t* window_manager_find_target_by_win(widget_t* widget, void* win) {
+  native_window_t* nw = NULL; 
+  return_value_if_fail(widget != NULL, NULL);
+
+  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
+  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+  if(nw->handle == win) {
+    return iter;
+  }
+  WIDGET_FOR_EACH_CHILD_END()
+
+  return NULL;
+}
+
+static widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x, xy_t y) {
   point_t p = {x, y};
+  native_window_t* nw = NULL; 
   return_value_if_fail(widget != NULL, NULL);
 
   if (widget->grab_widget != NULL) {
@@ -131,6 +146,11 @@ static widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
   WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
   xy_t r = iter->x + iter->w;
   xy_t b = iter->y + iter->h;
+
+  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+  if(nw == NULL || nw->handle != win) {
+    continue;
+  }
 
   if (iter->visible && iter->sensitive && iter->enable && p.x >= iter->x && p.y >= iter->y &&
       p.x <= r && p.y <= b) {
@@ -257,6 +277,7 @@ static ret_t window_manager_native_post_init(widget_t* widget, wh_t w, wh_t h) {
 }
 
 static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_t* e) {
+  widget_t* target = NULL;
   input_device_status_t* ids = NULL;
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
   return_value_if_fail(wm != NULL && e != NULL, RET_BAD_PARAMS);
@@ -271,7 +292,15 @@ static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_
     }
   }
 
-  input_device_status_on_input_event(ids, widget, e);
+  if(e->type == EVT_POINTER_DOWN
+      || e->type == EVT_POINTER_MOVE
+      || e->type == EVT_POINTER_UP) {
+    pointer_event_t* evt = pointer_event_cast(e);
+    target = window_manager_find_target(widget, e->native_window_handle, evt->x, evt->y);
+  } else {
+    target = window_manager_find_target_by_win(widget, e->native_window_handle);
+  }
+  input_device_status_on_input_event(ids, target, e);
 
   return RET_OK;
 }
@@ -313,7 +342,6 @@ static const widget_vtable_t s_window_manager_vtable = {
     .on_event = window_manager_on_event,
     .on_layout_children = window_manager_on_layout_children,
     .on_remove_child = window_manager_on_remove_child,
-    .find_target = window_manager_find_target,
     .on_destroy = window_manager_on_destroy};
 
 widget_t* window_manager_create(void) {
