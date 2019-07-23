@@ -34,14 +34,14 @@
 #include "base/input_method.h"
 
 static ret_t main_loop_sdl2_dispatch_text_input(main_loop_simple_t* loop, SDL_Event* sdl_event) {
-  im_commit_event_t e;
+  im_commit_event_t event;
   SDL_TextInputEvent* text_input_event = (SDL_TextInputEvent*)sdl_event;
 
-  memset(&e, 0x00, sizeof(e));
-  e.e = event_init(EVT_IM_COMMIT, NULL);
-  e.text = text_input_event->text;
+  memset(&event, 0x00, sizeof(event));
+  event.e = event_init(EVT_IM_COMMIT, NULL);
+  event.text = text_input_event->text;
 
-  return input_method_dispatch_to_widget(input_method(), &(e.e));
+  return input_method_dispatch_to_widget(input_method(), &(event.e));
 }
 
 static ret_t main_loop_sdl2_dispatch_text_editing(main_loop_simple_t* loop, SDL_Event* sdl_event) {
@@ -56,11 +56,13 @@ static ret_t main_loop_sdl2_dispatch_key_event(main_loop_simple_t* loop, SDL_Eve
   switch (type) {
     case SDL_KEYDOWN: {
       key_event_init(&event, EVT_KEY_DOWN, widget, sdl_event->key.keysym.sym);
+      event.e.native_window_handle = SDL_GetWindowFromID(sdl_event->key.windowID);
       window_manager_dispatch_input_event(widget, (event_t*)&event);
       break;
     }
     case SDL_KEYUP: {
       key_event_init(&event, EVT_KEY_UP, widget, sdl_event->key.keysym.sym);
+      event.e.native_window_handle = SDL_GetWindowFromID(sdl_event->key.windowID);
       window_manager_dispatch_input_event(widget, (event_t*)&event);
       break;
     }
@@ -78,6 +80,7 @@ static ret_t main_loop_sdl2_dispatch_wheel_event(main_loop_simple_t* loop, SDL_E
   widget_t* widget = loop->base.wm;
   event_t* e = wheel_event_init(&event, EVT_WHEEL, widget, sdl_event->wheel.y);
 
+  event.e.native_window_handle = SDL_GetWindowFromID(sdl_event->wheel.windowID);
   if (event.dy > 0) {
     event.dy = tk_max(MIN_WHEEL_DELTA, event.dy);
   } else if (event.dy < 0) {
@@ -101,6 +104,7 @@ static ret_t main_loop_sdl2_dispatch_mouse_event(main_loop_simple_t* loop, SDL_E
                          sdl_event->button.y);
       event.button = sdl_event->button.button;
       event.pressed = loop->pressed;
+      event.e.native_window_handle = SDL_GetWindowFromID(sdl_event->button.windowID);
 
       SDL_CaptureMouse(TRUE);
       window_manager_dispatch_input_event(widget, (event_t*)&event);
@@ -110,6 +114,7 @@ static ret_t main_loop_sdl2_dispatch_mouse_event(main_loop_simple_t* loop, SDL_E
       pointer_event_init(&event, EVT_POINTER_UP, widget, sdl_event->button.x, sdl_event->button.y);
       event.button = sdl_event->button.button;
       event.pressed = loop->pressed;
+      event.e.native_window_handle = SDL_GetWindowFromID(sdl_event->button.windowID);
 
       window_manager_dispatch_input_event(widget, (event_t*)&event);
       loop->pressed = 0;
@@ -121,6 +126,7 @@ static ret_t main_loop_sdl2_dispatch_mouse_event(main_loop_simple_t* loop, SDL_E
                          sdl_event->button.y);
       event.button = 0;
       event.pressed = loop->pressed;
+      event.e.native_window_handle = SDL_GetWindowFromID(sdl_event->button.windowID);
 
       window_manager_dispatch_input_event(widget, (event_t*)&event);
       break;
