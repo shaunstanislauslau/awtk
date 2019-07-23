@@ -47,22 +47,76 @@ static bool_t window_is_opened(widget_t* widget) {
   return stage == WINDOW_STAGE_OPENED;
 }
 
-static ret_t window_manager_native_open_window(widget_t* widget, widget_t* window) {
+static ret_t window_manager_dispatch_window_event(widget_t* window, event_type_t type) {
+  window_event_t evt;
+  event_t e = event_init(type, window);
+  widget_dispatch(window, &e);
+
+  evt.window = window;
+  evt.e = event_init(type, window->parent);
+
+  return widget_dispatch(window->parent, (event_t*)&(evt));
+}
+
+static ret_t window_manager_dispatch_window_open(widget_t* curr_win) {
+  window_manager_dispatch_window_event(curr_win, EVT_WINDOW_WILL_OPEN);
+
+  return window_manager_dispatch_window_event(curr_win, EVT_WINDOW_OPEN);
+}
+
+static ret_t window_manager_idle_dispatch_window_open(const idle_info_t* info) {
   native_window_t* nw = NULL;
-  return_value_if_fail(widget != NULL && window != NULL, RET_BAD_PARAMS);
-  nw = native_window_create(window);
+  widget_t* window = WIDGET(info->ctx);
+  return_value_if_fail(window != NULL, RET_REMOVE);
+
+  if(window->w <= 0) {
+    window->w = window->parent->w;
+  }
   
+  if(window->h <= 0) {
+    window->h = window->parent->h;
+  }
+
+  widget_layout(window);
+  nw = native_window_create(window);
   widget_set_prop_pointer(window, WIDGET_PROP_NATIVE_WINDOW, nw);
+  window_manager_dispatch_window_open(window);
+
+  return RET_REMOVE;
+}
+
+static ret_t window_manager_native_open_window(widget_t* widget, widget_t* window) {
+  return_value_if_fail(widget != NULL && window != NULL, RET_BAD_PARAMS);
+
+  widget_add_child(widget, window);
+  widget_add_idle(window, (idle_func_t)window_manager_idle_dispatch_window_open);
+
+  return RET_OK;
+}
+
+static ret_t window_manager_idle_destroy_window(const idle_info_t* info) {
+  native_window_t* nw = NULL; 
+  widget_t* win = WIDGET(info->ctx);
+  
+  nw = (native_window_t*)widget_get_prop_pointer(win, WIDGET_PROP_NATIVE_WINDOW);
+  if(nw != NULL) {
+    object_unref(OBJECT(nw));
+  }
+
+  widget_destroy(win);
 
   return RET_OK;
 }
 
 static ret_t window_manager_native_close_window_force(widget_t* widget, widget_t* window) {
+  widget_remove_child(widget, window);
+  idle_add(window_manager_idle_destroy_window, window);
   return RET_OK;
 }
 
 static ret_t window_manager_native_close_window(widget_t* widget, widget_t* window) {
-  return RET_OK;
+
+  return window_manager_close_window_force(widget, window);
 }
 
 static widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
@@ -92,18 +146,44 @@ static widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
 }
 
 
-static ret_t window_manager_native_paint(widget_t* widget) {
-  return RET_OK;
-}
-
 static widget_t* window_manager_native_get_prev_window(widget_t* widget) {
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
 
   return wm->prev_win;
 }
 
+static ret_t window_manager_paint_child(widget_t* widget, widget_t* child) {
+  rect_t* dr = NULL;
+  canvas_t* canvas = NULL; 
+  native_window_t* nw = NULL; 
+  window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
+  nw = (native_window_t*)widget_get_prop_pointer(child, WIDGET_PROP_NATIVE_WINDOW);
+  
+  dr = &(nw->dirty_rect);
+  if(dr->w > 0 && dr->h) {
+    rect_t r = native_window_calc_dirty_rect(nw);
+    if(r.w > 0 && r.h > 0) {
+      canvas_t* c = native_window_get_canvas(nw);
 
-static ret_t window_manager_on_paint_children(widget_t* widget, canvas_t* c) {
+      canvas_begin_frame(c, &r, LCD_DRAW_NORMAL);
+      widget_paint(child, c);
+      canvas_end_frame(c);
+      native_window_update_last_dirty_rect(nw);
+    }
+  }
+
+  return RET_OK;
+}
+
+static ret_t window_manager_native_paint(widget_t* widget) {
+  window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
+  return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
+
+  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
+  if (iter->visible) {
+    window_manager_paint_child(widget, iter);
+  }
+  WIDGET_FOR_EACH_CHILD_END()
 
   return RET_OK;
 }
@@ -232,7 +312,6 @@ static const widget_vtable_t s_window_manager_vtable = {
     .get_prop = window_manager_get_prop,
     .on_event = window_manager_on_event,
     .on_layout_children = window_manager_on_layout_children,
-    .on_paint_children = window_manager_on_paint_children,
     .on_remove_child = window_manager_on_remove_child,
     .find_target = window_manager_find_target,
     .on_destroy = window_manager_on_destroy};

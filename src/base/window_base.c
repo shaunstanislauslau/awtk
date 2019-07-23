@@ -24,6 +24,7 @@
 #include "base/keys.h"
 #include "base/enums.h"
 #include "base/window_base.h"
+#include "base/native_window.h"
 #include "base/font_manager.h"
 #include "base/image_manager.h"
 #include "base/assets_manager.h"
@@ -191,6 +192,18 @@ ret_t window_base_on_destroy(widget_t* widget) {
     assets_manager_t* am = widget_get_assets_manager(widget);
     assets_manager_unref(am, window_base->res_theme);
   }
+
+  return RET_OK;
+}
+
+ret_t window_base_invalidate(widget_t* widget, rect_t* r) {
+  native_window_t* nw = NULL;
+  return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
+
+  nw = (native_window_t*)widget_get_prop_pointer(widget, WIDGET_PROP_NATIVE_WINDOW);
+  return_value_if_fail(nw != NULL, RET_BAD_PARAMS);
+
+  native_window_invalidate(nw, r);
 
   return RET_OK;
 }

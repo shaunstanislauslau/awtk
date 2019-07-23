@@ -144,6 +144,7 @@ typedef struct _window_base_t {
 /*for sub class*/
 ret_t window_base_on_destroy(widget_t* widget);
 ret_t window_base_on_event(widget_t* widget, event_t* e);
+ret_t window_base_invalidate(widget_t* widget, rect_t* r);
 ret_t window_base_on_paint_begin(widget_t* widget, canvas_t* c);
 ret_t window_base_on_paint_end(widget_t* widget, canvas_t* c);
 ret_t window_base_on_paint_self(widget_t* widget, canvas_t* c);

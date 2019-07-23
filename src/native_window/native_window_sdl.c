@@ -117,10 +117,9 @@ static const object_vtable_t s_native_window_sdl_vtable = {
     .set_prop = native_window_sdl_set_prop,
     .on_destroy = native_window_sdl_on_destroy};
 
-static native_window_t* native_window_create_internal(const char* title, int32_t x, int32_t y,
-                                                      uint32_t w, uint32_t h) {
+static native_window_t* native_window_create_internal(const char* title, 
+    uint32_t flags, int32_t x, int32_t y, uint32_t w, uint32_t h) {
   lcd_t* lcd = NULL;
-  uint32_t flags = 0;
   object_t* obj = object_create(&s_native_window_sdl_vtable);
   native_window_t* win = NATIVE_WINDOW(obj);
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
@@ -162,14 +161,33 @@ native_window_t* native_window_create(widget_t* widget) {
   int32_t y = widget->y;
   int32_t w = widget->w;
   int32_t h = widget->h;
+  native_window_t* nw = NULL;
 
   if (s_shared_win != NULL) {
     object_ref(OBJECT(s_shared_win));
 
-    return s_shared_win;
+    nw = s_shared_win;
   } else {
-    return native_window_create_internal("", x, y, w, h);
+    str_t str;
+    uint32_t flags = 0;
+
+    str_init(&str, 0);
+    str_from_wstr(&str, widget->text.str);
+
+    flags = SDL_WINDOW_MAXIMIZED;
+    //flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+    //flags = SDL_WINDOW_BORDERLESS;
+    //flags = SDL_WINDOW_MOUSE_CAPTURE;
+    if(widget_is_popup(widget) || widget_is_dialog(widget)) {
+      flags = SDL_WINDOW_BORDERLESS | SDL_WINDOW_MOUSE_CAPTURE;
+    } else {
+      flags = SDL_WINDOW_MAXIMIZED;
+    }
+    nw = native_window_create_internal(str.str, flags, x, y, w, h);
+    str_reset(&str);
   }
+
+  return nw;
 }
 
 #ifdef WITH_NANOVG_GL
@@ -214,7 +232,7 @@ ret_t native_window_sdl_init(bool_t shared, uint32_t w, uint32_t h) {
   if (shared) {
     int32_t x = SDL_WINDOWPOS_UNDEFINED;
     int32_t y = SDL_WINDOWPOS_UNDEFINED;
-    s_shared_win = native_window_create_internal(title, x, y, w, h);
+    s_shared_win = native_window_create_internal(title, 0, x, y, w, h);
   }
 
   return RET_OK;

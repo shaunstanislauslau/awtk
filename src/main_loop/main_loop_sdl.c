@@ -268,8 +268,11 @@ static ret_t main_loop_sdl2_destroy(main_loop_t* l) {
 
 main_loop_t* main_loop_init(int w, int h) {
   main_loop_simple_t* loop = NULL;
+#ifdef MULTI_NATIVE_WINDOW
+  native_window_sdl_init(FALSE, w, h);
+#else
   native_window_sdl_init(TRUE, w, h);
-
+#endif/*MULTI_NATIVE_WINDOW*/
   loop = main_loop_simple_init(w, h);
   loop->base.destroy = main_loop_sdl2_destroy;
   loop->dispatch_input = main_loop_sdl2_dispatch;
