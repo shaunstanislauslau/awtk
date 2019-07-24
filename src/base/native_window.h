@@ -58,10 +58,7 @@ struct _native_window_t {
   rect_t last_dirty_rect;
   const native_window_vtable_t* vt;
 
-  xy_t x;
-  xy_t y;
-  wh_t w;
-  wh_t h;
+  rect_t rect;
 };
 
 /**
@@ -114,6 +111,15 @@ ret_t native_window_invalidate(native_window_t* win, rect_t* r);
 ret_t native_window_update_last_dirty_rect(native_window_t* win);
 
 #define NATIVE_WINDOW(win) ((native_window_t*)(win))
+
+#define NATIVE_WINDOW_PROP_SIZE "size"
+#define NATIVE_WINDOW_PROP_TITLE "title"
+#define NATIVE_WINDOW_PROP_POSITION "position"
+
+typedef enum _native_window_event_type_t {
+  EVT_NATIVE_WINDOW_RESIZED = 0xff,
+  EVT_NATIVE_WINDOW_DESTROY
+} native_window_event_type_t;
 
 END_C_DECLS
 

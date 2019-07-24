@@ -2965,4 +2965,3 @@ bool_t widget_is_dialog(widget_t* widget) {
 bool_t widget_is_popup(widget_t* widget) {
   return tk_str_eq(widget->vt->type, WIDGET_TYPE_POPUP);
 }
-

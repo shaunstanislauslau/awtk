@@ -207,7 +207,7 @@ ret_t window_base_invalidate(widget_t* widget, rect_t* r) {
   return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
 
   nw = (native_window_t*)widget_get_prop_pointer(widget, WIDGET_PROP_NATIVE_WINDOW);
-  if(nw != NULL) {
+  if (nw != NULL) {
     native_window_invalidate(nw, r);
   }
 

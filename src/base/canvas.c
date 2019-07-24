@@ -285,7 +285,7 @@ float_t canvas_measure_utf8(canvas_t* c, const char* str) {
 ret_t canvas_begin_frame(canvas_t* c, rect_t* dirty_rect, lcd_draw_mode_t draw_mode) {
   ret_t ret = RET_OK;
   return_value_if_fail(c != NULL, RET_BAD_PARAMS);
-  if(c->began_frame) {
+  if (c->began_frame) {
     return RET_OK;
   } else {
     c->began_frame = TRUE;
@@ -1009,7 +1009,7 @@ ret_t canvas_draw_image_patch9(canvas_t* c, bitmap_t* img, rect_t* dst_in) {
 
 ret_t canvas_end_frame(canvas_t* c) {
   return_value_if_fail(c != NULL, RET_BAD_PARAMS);
-  if(c->began_frame) {
+  if (c->began_frame) {
     c->began_frame = FALSE;
   } else {
     return RET_OK;

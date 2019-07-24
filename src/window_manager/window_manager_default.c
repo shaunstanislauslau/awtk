@@ -705,7 +705,6 @@ static widget_t* window_manager_default_get_prev_window(widget_t* widget) {
   return wm->prev_win;
 }
 
-
 static ret_t window_manager_on_paint_children(widget_t* widget, canvas_t* c) {
   int32_t start = 0;
   bool_t has_fullscreen_win = FALSE;
@@ -1020,7 +1019,6 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .dispatch_input_event = window_manager_default_dispatch_input_event,
     .set_screen_saver_time = window_manager_default_set_screen_saver_time};
 
-
 static const widget_vtable_t s_window_manager_vtable = {
     .size = sizeof(window_manager_t),
     .is_window_manager = TRUE,
@@ -1039,7 +1037,6 @@ widget_t* window_manager_create(void) {
   window_manager_default_t* wm = TKMEM_ZALLOC(window_manager_default_t);
   return_value_if_fail(wm != NULL, NULL);
 
-  return window_manager_init(WINDOW_MANAGER(wm),
-      &s_window_manager_vtable, &s_window_manager_self_vtable);
+  return window_manager_init(WINDOW_MANAGER(wm), &s_window_manager_vtable,
+                             &s_window_manager_self_vtable);
 }
-

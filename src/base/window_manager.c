@@ -163,7 +163,7 @@ widget_t* window_manager_cast(widget_t* widget) {
 widget_t* window_manager_get_top_main_window(widget_t* widget) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL && wm->vt != NULL, NULL);
-  if(wm->vt->get_top_main_window != NULL) {
+  if (wm->vt->get_top_main_window != NULL) {
     return wm->vt->get_top_main_window(widget);
   } else {
     return window_manager_default_impl_get_top_main_window(widget);
@@ -174,7 +174,7 @@ widget_t* window_manager_get_top_window(widget_t* widget) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL && wm->vt != NULL, NULL);
 
-  if(wm->vt->get_top_window != NULL) {
+  if (wm->vt->get_top_window != NULL) {
     return wm->vt->get_top_window(widget);
   } else {
     return window_manager_default_impl_get_top_window(widget);
@@ -277,7 +277,7 @@ ret_t window_manager_set_cursor(widget_t* widget, const char* cursor) {
 ret_t window_manager_back(widget_t* widget) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL && wm->vt != NULL, RET_BAD_PARAMS);
-  if(wm->vt->back != NULL) {
+  if (wm->vt->back != NULL) {
     return wm->vt->back(widget);
   } else {
     return window_manager_default_impl_back(widget);
@@ -287,7 +287,7 @@ ret_t window_manager_back_to_home(widget_t* widget) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL && wm->vt != NULL, RET_BAD_PARAMS);
 
-  if(wm->vt->back_to_home != NULL) {
+  if (wm->vt->back_to_home != NULL) {
     return wm->vt->back_to_home(widget);
   } else {
     return window_manager_default_impl_back_to_home(widget);
@@ -349,8 +349,8 @@ static ret_t wm_on_locale_changed(void* ctx, event_t* e) {
   return RET_OK;
 }
 
-widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt, 
-    const window_manager_vtable_t* vt) {
+widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt,
+                              const window_manager_vtable_t* vt) {
   widget_t* widget = WIDGET(wm);
   return_value_if_fail(wm != NULL, NULL);
 
@@ -361,3 +361,13 @@ widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt,
   return widget;
 }
 
+ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, void* handle) {
+  window_manager_t* wm = WINDOW_MANAGER(widget);
+  return_value_if_fail(widget != NULL && e != NULL && handle != NULL, RET_BAD_PARAMS);
+
+  if (wm->vt->on_native_window_event != NULL) {
+    wm->vt->on_native_window_event(widget, e, handle);
+  }
+
+  return RET_OK;
+}

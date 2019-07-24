@@ -613,7 +613,7 @@ static ret_t timer_preload(const timer_info_t* timer) {
   if (s_preload_nr == total) {
 #ifndef MULTI_NATIVE_WINDOW
     window_open("system_bar");
-#endif/*MULTI_NATIVE_WINDOW*/
+#endif /*MULTI_NATIVE_WINDOW*/
 
     open_window("main", win);
 

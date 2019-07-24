@@ -37,6 +37,7 @@ ret_t main_loop_quit(main_loop_t* l) {
 
   if (l->quit != NULL) {
     l->quit(l);
+    l->app_quited = TRUE;
   }
 
   return RET_OK;

@@ -26,6 +26,7 @@
 #include "base/font_manager.h"
 #include "lcd/lcd_sdl2.h"
 #include "base/idle.h"
+#include "base/events.h"
 #include "base/timer.h"
 #include <SDL.h>
 
@@ -150,6 +151,8 @@ static ret_t main_loop_sdl2_dispatch_window_resize(main_loop_simple_t* loop, uin
 }
 
 static ret_t main_loop_sdl2_dispatch_window_event(main_loop_simple_t* loop, SDL_Event* event) {
+  main_loop_t* l = (main_loop_t*)(loop);
+
   switch (event->window.event) {
     case SDL_WINDOWEVENT_SHOWN:
       log_debug("Window %d shown\n", event->window.windowID);
@@ -168,12 +171,12 @@ static ret_t main_loop_sdl2_dispatch_window_event(main_loop_simple_t* loop, SDL_
       log_debug("Window %d resized to %dx%d\n", event->window.windowID, event->window.data1,
                 event->window.data2);
       break;
-    case SDL_WINDOWEVENT_SIZE_CHANGED:
-      log_debug("Window %d size changed to %dx%d\n", event->window.windowID, event->window.data1,
-                event->window.data2);
-      main_loop_sdl2_dispatch_window_resize(loop, event->window.windowID, event->window.data1,
-                                            event->window.data2);
+    case SDL_WINDOWEVENT_SIZE_CHANGED: {
+      event_t e = event_init(EVT_NATIVE_WINDOW_RESIZED, NULL);
+      SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+      window_manager_dispatch_native_window_event(l->wm, &e, win);
       break;
+    }
     case SDL_WINDOWEVENT_MINIMIZED:
       log_debug("Window %d minimized\n", event->window.windowID);
       break;
@@ -195,13 +198,11 @@ static ret_t main_loop_sdl2_dispatch_window_event(main_loop_simple_t* loop, SDL_
     case SDL_WINDOWEVENT_FOCUS_LOST:
       log_debug("Window %d lost keyboard focus\n", event->window.windowID);
       break;
-    case SDL_WINDOWEVENT_CLOSE:
-      log_debug("Window %d closed\n", event->window.windowID);
-      loop->user1 = NULL;
-      loop->user2 = NULL;
-      main_loop_quit(&(loop->base));
-      ((main_loop_t*)(loop))->app_quited = TRUE;
-      break;
+    case SDL_WINDOWEVENT_CLOSE: {
+      event_t e = event_init(EVT_NATIVE_WINDOW_DESTROY, NULL);
+      SDL_Window* win = SDL_GetWindowFromID(event->window.windowID);
+      window_manager_dispatch_native_window_event(l->wm, &e, win);
+    } break;
 #if SDL_VERSION_ATLEAST(2, 0, 5)
     case SDL_WINDOWEVENT_TAKE_FOCUS:
       log_debug("Window %d is offered a focus\n", event->window.windowID);
@@ -278,7 +279,7 @@ main_loop_t* main_loop_init(int w, int h) {
   native_window_sdl_init(FALSE, w, h);
 #else
   native_window_sdl_init(TRUE, w, h);
-#endif/*MULTI_NATIVE_WINDOW*/
+#endif /*MULTI_NATIVE_WINDOW*/
   loop = main_loop_simple_init(w, h);
   loop->base.destroy = main_loop_sdl2_destroy;
   loop->dispatch_input = main_loop_sdl2_dispatch;

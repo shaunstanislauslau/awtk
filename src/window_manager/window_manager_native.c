@@ -60,10 +60,10 @@ static ret_t window_manager_dispatch_window_open(widget_t* curr_win) {
 static ret_t window_manager_create_native_window(widget_t* widget) {
   native_window_t* nw = NULL;
 
-  if(tk_str_eq(widget_get_type(widget), WIDGET_TYPE_NORMAL_WINDOW)) {
+  if (tk_str_eq(widget_get_type(widget), WIDGET_TYPE_NORMAL_WINDOW)) {
     nw = native_window_create(widget);
   } else {
-    widget_t* prev =  window_manager_get_prev_window(widget->parent);
+    widget_t* prev = window_manager_get_prev_window(widget->parent);
     nw = (native_window_t*)widget_get_prop_pointer(prev, WIDGET_PROP_NATIVE_WINDOW);
     object_ref(OBJECT(nw));
   }
@@ -74,15 +74,15 @@ static ret_t window_manager_create_native_window(widget_t* widget) {
   return RET_OK;
 }
 
-static ret_t window_manager_post_open(widget_t* window)  {
-  if(window->w <= 0) {
+static ret_t window_manager_post_open(widget_t* window) {
+  if (window->w <= 0) {
     window->w = window->parent->w;
   }
-  
-  if(window->h <= 0) {
+
+  if (window->h <= 0) {
     window->h = window->parent->h;
   }
-  
+
   if (widget_is_dialog(window)) {
     widget_t* widget = window->parent;
     xy_t x = (widget->w - window->w) >> 1;
@@ -114,11 +114,11 @@ static ret_t window_manager_native_open_window(widget_t* widget, widget_t* windo
 }
 
 static ret_t window_manager_idle_destroy_window(const idle_info_t* info) {
-  native_window_t* nw = NULL; 
+  native_window_t* nw = NULL;
   widget_t* win = WIDGET(info->ctx);
-  
+
   nw = (native_window_t*)widget_get_prop_pointer(win, WIDGET_PROP_NATIVE_WINDOW);
-  if(nw != NULL) {
+  if (nw != NULL) {
     object_unref(OBJECT(nw));
   }
 
@@ -134,17 +134,16 @@ static ret_t window_manager_native_close_window_force(widget_t* widget, widget_t
 }
 
 static ret_t window_manager_native_close_window(widget_t* widget, widget_t* window) {
-
   return window_manager_close_window_force(widget, window);
 }
 
 static widget_t* window_manager_find_target_by_win(widget_t* widget, void* win) {
-  native_window_t* nw = NULL; 
+  native_window_t* nw = NULL;
   return_value_if_fail(widget != NULL, NULL);
 
   WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
   nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-  if(nw->handle == win) {
+  if (nw->handle == win) {
     return iter;
   }
   WIDGET_FOR_EACH_CHILD_END()
@@ -154,7 +153,7 @@ static widget_t* window_manager_find_target_by_win(widget_t* widget, void* win) 
 
 static widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x, xy_t y) {
   point_t p = {x, y};
-  native_window_t* nw = NULL; 
+  native_window_t* nw = NULL;
   return_value_if_fail(widget != NULL, NULL);
 
   if (widget->grab_widget != NULL) {
@@ -167,7 +166,7 @@ static widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x,
   xy_t b = iter->y + iter->h;
 
   nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-  if(nw == NULL || nw->handle != win) {
+  if (nw == NULL || nw->handle != win) {
     continue;
   }
 
@@ -184,7 +183,6 @@ static widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x,
   return NULL;
 }
 
-
 static widget_t* window_manager_native_get_prev_window(widget_t* widget) {
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
 
@@ -193,15 +191,15 @@ static widget_t* window_manager_native_get_prev_window(widget_t* widget) {
 
 static ret_t window_manager_paint_child(widget_t* widget, widget_t* child) {
   rect_t* dr = NULL;
-  canvas_t* canvas = NULL; 
-  native_window_t* nw = NULL; 
+  canvas_t* canvas = NULL;
+  native_window_t* nw = NULL;
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
   nw = (native_window_t*)widget_get_prop_pointer(child, WIDGET_PROP_NATIVE_WINDOW);
-  
+
   dr = &(nw->dirty_rect);
-  if(dr->w > 0 && dr->h) {
+  if (dr->w > 0 && dr->h) {
     rect_t r = native_window_calc_dirty_rect(nw);
-    if(r.w > 0 && r.h > 0) {
+    if (r.w > 0 && r.h > 0) {
       canvas_t* c = native_window_get_canvas(nw);
       widget_paint(child, c);
       native_window_update_last_dirty_rect(nw);
@@ -219,7 +217,7 @@ static ret_t window_manager_native_paint(widget_t* widget) {
   WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
   if (iter->visible) {
     nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-    
+
     r = native_window_calc_dirty_rect(nw);
     canvas_begin_frame(native_window_get_canvas(nw), &r, LCD_DRAW_NORMAL);
     wm->canvas = native_window_get_canvas(nw);
@@ -231,7 +229,7 @@ static ret_t window_manager_native_paint(widget_t* widget) {
     window_manager_paint_child(widget, iter);
   }
   WIDGET_FOR_EACH_CHILD_END()
-  
+
   WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
   if (iter->visible) {
     nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
@@ -248,7 +246,7 @@ static ret_t window_manager_on_remove_child(widget_t* widget, widget_t* window) 
 
 static ret_t window_manager_get_prop(widget_t* widget, const char* name, value_t* v) {
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
-  if(tk_str_eq(name, WIDGET_PROP_CANVAS)) {
+  if (tk_str_eq(name, WIDGET_PROP_CANVAS)) {
     value_set_pointer(v, wm->canvas);
     return RET_OK;
   }
@@ -274,10 +272,10 @@ static ret_t window_manager_native_set_cursor(widget_t* widget, const char* curs
 static ret_t window_manager_native_set_show_fps(widget_t* widget, bool_t show_fps);
 static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_t* e);
 static ret_t window_manager_native_set_screen_saver_time(widget_t* widget,
-                                                          uint32_t screen_saver_time);
+                                                         uint32_t screen_saver_time);
 
 static ret_t window_manager_native_get_pointer(widget_t* widget, xy_t* x, xy_t* y,
-                                                bool_t* pressed) {
+                                               bool_t* pressed) {
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
   return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
 
@@ -323,8 +321,7 @@ static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_
   return_value_if_fail(wm != NULL && e != NULL, RET_BAD_PARAMS);
 
   ids = &(wm->input_device_status);
-  if(e->type == EVT_POINTER_DOWN
-      || e->type == EVT_POINTER_UP) {
+  if (e->type == EVT_POINTER_DOWN || e->type == EVT_POINTER_UP) {
     pointer_event_t* evt = pointer_event_cast(e);
     target = window_manager_find_target(widget, e->native_window_handle, evt->x, evt->y);
   } else {
@@ -332,7 +329,7 @@ static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_
   }
   input_device_status_on_input_event(ids, target, e);
 
-  if(e->type == EVT_POINTER_DOWN) {
+  if (e->type == EVT_POINTER_DOWN) {
     wm->prev_win = target;
   }
 
@@ -344,11 +341,49 @@ static ret_t window_manager_native_set_show_fps(widget_t* widget, bool_t show_fp
 }
 
 static ret_t window_manager_native_set_screen_saver_time(widget_t* widget,
-                                                          uint32_t screen_saver_time) {
+                                                         uint32_t screen_saver_time) {
   return RET_OK;
 }
 
 static ret_t window_manager_native_set_cursor(widget_t* widget, const char* cursor) {
+  return RET_OK;
+}
+
+static ret_t window_manager_native_on_native_window_closed(widget_t* widget, void* handle) {
+  do {
+    widget_t* win = window_manager_find_target_by_win(widget, handle);
+    if (win == NULL) {
+      break;
+    }
+    window_manager_close_window_force(widget, win);
+  } while (TRUE);
+
+  return RET_OK;
+}
+
+static ret_t window_manager_native_native_window_resized(widget_t* widget, void* handle) {
+  native_window_t* nw = NULL;
+
+  WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
+  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+  if (nw->handle == handle) {
+    rect_t* r = (rect_t*)object_get_prop_pointer(OBJECT(nw), NATIVE_WINDOW_PROP_SIZE);
+    return_value_if_fail(r != NULL, RET_BAD_PARAMS);
+
+    widget_resize(iter, r->w, r->h);
+  }
+  WIDGET_FOR_EACH_CHILD_END()
+
+  return RET_OK;
+}
+
+static ret_t window_manager_native_dispatch_native_window_event(widget_t* widget, event_t* e,
+                                                                void* handle) {
+  if (e->type == EVT_NATIVE_WINDOW_DESTROY) {
+    window_manager_native_on_native_window_closed(widget, handle);
+  } else if (e->type == EVT_NATIVE_WINDOW_RESIZED) {
+    window_manager_native_native_window_resized(widget, handle);
+  }
   return RET_OK;
 }
 
@@ -364,8 +399,8 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .get_prev_window = window_manager_native_get_prev_window,
     .close_window_force = window_manager_native_close_window_force,
     .dispatch_input_event = window_manager_native_dispatch_input_event,
+    .on_native_window_event = window_manager_native_dispatch_native_window_event,
     .set_screen_saver_time = window_manager_native_set_screen_saver_time};
-
 
 static const widget_vtable_t s_window_manager_vtable = {
     .size = sizeof(window_manager_t),
@@ -382,7 +417,6 @@ widget_t* window_manager_create(void) {
   window_manager_native_t* wm = TKMEM_ZALLOC(window_manager_native_t);
   return_value_if_fail(wm != NULL, NULL);
 
-  return window_manager_init(WINDOW_MANAGER(wm),
-      &s_window_manager_vtable, &s_window_manager_self_vtable);
+  return window_manager_init(WINDOW_MANAGER(wm), &s_window_manager_vtable,
+                             &s_window_manager_self_vtable);
 }
-

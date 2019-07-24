@@ -47,6 +47,9 @@ typedef ret_t (*window_manager_back_t)(widget_t* widget);
 typedef ret_t (*window_manager_back_to_home_t)(widget_t* widget);
 typedef ret_t (*window_manager_get_pointer_t)(widget_t* widget, xy_t* x, xy_t* y, bool_t* pressed);
 
+typedef ret_t (*window_manager_dispatch_native_window_event_t)(widget_t* widget, event_t* e,
+                                                               void* handle);
+
 typedef struct _window_manager_vtable_t {
   window_manager_back_t back;
   window_manager_paint_t paint;
@@ -62,6 +65,7 @@ typedef struct _window_manager_vtable_t {
   window_manager_close_window_force_t close_window_force;
   window_manager_get_top_main_window_t get_top_main_window;
   window_manager_dispatch_input_event_t dispatch_input_event;
+  window_manager_dispatch_native_window_event_t on_native_window_event;
   window_manager_set_screen_saver_time_t set_screen_saver_time;
   window_manager_get_pointer_t get_pointer;
 } window_manager_vtable_t;
@@ -310,9 +314,21 @@ ret_t window_manager_back(widget_t* widget);
  */
 ret_t window_manager_back_to_home(widget_t* widget);
 
+/**
+ * @method window_manager_dispatch_native_window_event
+ * 处理native window事件。
+ *
+ * @param {widget_t*} widget 窗口管理器对象。
+ * @param {event_t*} e 事件。
+ * @param {void*} handle native window句柄。
+ *
+ * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
+ */
+ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, void* handle);
+
 widget_t* window_manager_create(void);
-widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt, 
-    const window_manager_vtable_t* vt);
+widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt,
+                              const window_manager_vtable_t* vt);
 
 #define WINDOW_MANAGER(widget) ((window_manager_t*)(widget))
 

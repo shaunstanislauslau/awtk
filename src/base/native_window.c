@@ -72,7 +72,7 @@ rect_t native_window_calc_dirty_rect(native_window_t* win) {
   ldr = &(win->last_dirty_rect);
   rect_merge(&r, ldr);
 
-  return rect_fix(&r, win->w, win->h);
+  return rect_fix(&r, win->rect.w, win->rect.h);
 }
 
 ret_t native_window_invalidate(native_window_t* win, rect_t* r) {
@@ -81,13 +81,13 @@ ret_t native_window_invalidate(native_window_t* win, rect_t* r) {
 
   dr = &(win->dirty_rect);
 
-  if(r != NULL) {
+  if (r != NULL) {
     rect_merge(dr, r);
   } else {
     dr->x = 0;
     dr->y = 0;
-    dr->w = win->w;
-    dr->h = win->h;
+    dr->w = win->rect.w;
+    dr->h = win->rect.h;
   }
 
   return RET_OK;

@@ -40,10 +40,10 @@ static ret_t native_window_sdl_move(native_window_t* win, xy_t x, xy_t y) {
   int oldy = 0;
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
 
-  win->x = x;
-  win->y = y;
+  win->rect.x = x;
+  win->rect.y = y;
   SDL_GetWindowPosition(sdl->window, &oldx, &oldy);
-  if(oldx != x || oldy != y) {
+  if (oldx != x || oldy != y) {
     SDL_SetWindowPosition(sdl->window, x, y);
   }
 
@@ -55,10 +55,10 @@ static ret_t native_window_sdl_resize(native_window_t* win, wh_t w, wh_t h) {
   int oldh = 0;
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
 
-  win->w = w;
-  win->h = h;
+  win->rect.w = w;
+  win->rect.h = h;
   SDL_GetWindowSize(sdl->window, &oldw, &oldh);
-  if(w != oldw || h != oldh) {
+  if (w != oldw || h != oldh) {
     SDL_SetWindowSize(sdl->window, w, h);
   }
 
@@ -95,10 +95,39 @@ static const native_window_vtable_t s_native_window_vtable = {
     .get_canvas = native_window_sdl_get_canvas};
 
 static ret_t native_window_sdl_set_prop(object_t* obj, const char* name, const value_t* v) {
+  native_window_t* win = NATIVE_WINDOW(obj);
+  native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
+  if (tk_str_eq(NATIVE_WINDOW_PROP_SIZE, name)) {
+    rect_t* r = (rect_t*)value_pointer(v);
+    native_window_sdl_resize(win, r->w, r->h);
+
+    return RET_OK;
+  } else if (tk_str_eq(NATIVE_WINDOW_PROP_POSITION, name)) {
+    rect_t* r = (rect_t*)value_pointer(v);
+    native_window_sdl_move(win, r->x, r->y);
+
+    return RET_OK;
+  }
   return RET_NOT_FOUND;
 }
 
 static ret_t native_window_sdl_get_prop(object_t* obj, const char* name, value_t* v) {
+  native_window_t* win = NATIVE_WINDOW(obj);
+  native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
+
+  if (tk_str_eq(NATIVE_WINDOW_PROP_SIZE, name) || tk_str_eq(NATIVE_WINDOW_PROP_POSITION, name)) {
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
+    SDL_Window* sdlwin = (SDL_Window*)(win->handle);
+
+    SDL_GetWindowSize(sdlwin, &w, &h);
+    SDL_GetWindowPosition(sdlwin, &x, &y);
+    win->rect = rect_init(x, y, w, h);
+    value_set_pointer(v, &(win->rect));
+  }
+
   return RET_NOT_FOUND;
 }
 
@@ -117,8 +146,8 @@ static const object_vtable_t s_native_window_sdl_vtable = {
     .set_prop = native_window_sdl_set_prop,
     .on_destroy = native_window_sdl_on_destroy};
 
-static native_window_t* native_window_create_internal(const char* title, 
-    uint32_t flags, int32_t x, int32_t y, uint32_t w, uint32_t h) {
+static native_window_t* native_window_create_internal(const char* title, uint32_t flags, int32_t x,
+                                                      int32_t y, uint32_t w, uint32_t h) {
   lcd_t* lcd = NULL;
   object_t* obj = object_create(&s_native_window_sdl_vtable);
   native_window_t* win = NATIVE_WINDOW(obj);
@@ -138,10 +167,10 @@ static native_window_t* native_window_create_internal(const char* title,
       SDL_CreateRenderer(sdl->window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 #endif /*WITH_NANOVG_SOFT*/
 
-  win->x = x;
-  win->y = y;
-  win->w = w;
-  win->h = h;
+  win->rect.x = x;
+  win->rect.y = y;
+  win->rect.w = w;
+  win->rect.h = h;
   win->handle = sdl->window;
   win->vt = &s_native_window_vtable;
 
@@ -175,10 +204,10 @@ native_window_t* native_window_create(widget_t* widget) {
     str_from_wstr(&str, widget->text.str);
 
     flags = SDL_WINDOW_MAXIMIZED;
-    //flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-    //flags = SDL_WINDOW_BORDERLESS;
-    //flags = SDL_WINDOW_MOUSE_CAPTURE;
-    if(widget_is_popup(widget) || widget_is_dialog(widget)) {
+    // flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+    // flags = SDL_WINDOW_BORDERLESS;
+    // flags = SDL_WINDOW_MOUSE_CAPTURE;
+    if (widget_is_popup(widget) || widget_is_dialog(widget)) {
       flags = SDL_WINDOW_BORDERLESS | SDL_WINDOW_MOUSE_CAPTURE;
     } else {
       flags = SDL_WINDOW_MAXIMIZED;

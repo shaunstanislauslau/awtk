@@ -271,7 +271,7 @@ typedef struct _widget_animator_t widget_animator_t;
 
 #ifndef MULTI_NATIVE_WINDOW
 #ifndef WITH_WINDOW_ANIMATORS
-#if defined(WITH_VGCANVAS) 
+#if defined(WITH_VGCANVAS)
 #define WITH_WINDOW_ANIMATORS 1
 #endif /*WITH_VGCANVAS*/
 #endif /*WITH_WINDOW_ANIMATORS*/
