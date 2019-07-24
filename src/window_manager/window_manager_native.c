@@ -74,10 +74,7 @@ static ret_t window_manager_create_native_window(widget_t* widget) {
   return RET_OK;
 }
 
-static ret_t window_manager_idle_dispatch_window_open(const idle_info_t* info) {
-  widget_t* window = WIDGET(info->ctx);
-  return_value_if_fail(window != NULL, RET_REMOVE);
-
+static ret_t window_manager_post_open(widget_t* window)  {
   if(window->w <= 0) {
     window->w = window->parent->w;
   }
@@ -85,10 +82,24 @@ static ret_t window_manager_idle_dispatch_window_open(const idle_info_t* info) {
   if(window->h <= 0) {
     window->h = window->parent->h;
   }
+  
+  if (widget_is_dialog(window)) {
+    widget_t* widget = window->parent;
+    xy_t x = (widget->w - window->w) >> 1;
+    xy_t y = (widget->h - window->h) >> 1;
+    widget_move(window, x, y);
+  }
 
   widget_layout(window);
   window_manager_create_native_window(window);
   window_manager_dispatch_window_open(window);
+  widget_invalidate_force(window, NULL);
+
+  return RET_OK;
+}
+
+static ret_t window_manager_post_open_async(const idle_info_t* info) {
+  window_manager_post_open(WIDGET(info->ctx));
 
   return RET_REMOVE;
 }
@@ -97,7 +108,7 @@ static ret_t window_manager_native_open_window(widget_t* widget, widget_t* windo
   return_value_if_fail(widget != NULL && window != NULL, RET_BAD_PARAMS);
 
   widget_add_child(widget, window);
-  widget_add_idle(window, (idle_func_t)window_manager_idle_dispatch_window_open);
+  widget_add_idle(window, (idle_func_t)window_manager_post_open_async);
 
   return RET_OK;
 }
@@ -211,6 +222,7 @@ static ret_t window_manager_native_paint(widget_t* widget) {
     
     r = native_window_calc_dirty_rect(nw);
     canvas_begin_frame(native_window_get_canvas(nw), &r, LCD_DRAW_NORMAL);
+    wm->canvas = native_window_get_canvas(nw);
   }
   WIDGET_FOR_EACH_CHILD_END()
 
@@ -235,6 +247,12 @@ static ret_t window_manager_on_remove_child(widget_t* widget, widget_t* window) 
 }
 
 static ret_t window_manager_get_prop(widget_t* widget, const char* name, value_t* v) {
+  window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
+  if(tk_str_eq(name, WIDGET_PROP_CANVAS)) {
+    value_set_pointer(v, wm->canvas);
+    return RET_OK;
+  }
+
   return RET_NOT_FOUND;
 }
 
@@ -305,17 +323,7 @@ static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_
   return_value_if_fail(wm != NULL && e != NULL, RET_BAD_PARAMS);
 
   ids = &(wm->input_device_status);
-  if (wm->ignore_user_input) {
-    if (ids->pressed && e->type == EVT_POINTER_UP) {
-      log_debug("animating ignore input, but it is last pointer_up\n");
-    } else {
-      log_debug("animating ignore input\n");
-      return RET_OK;
-    }
-  }
-
   if(e->type == EVT_POINTER_DOWN
-      || e->type == EVT_POINTER_MOVE
       || e->type == EVT_POINTER_UP) {
     pointer_event_t* evt = pointer_event_cast(e);
     target = window_manager_find_target(widget, e->native_window_handle, evt->x, evt->y);

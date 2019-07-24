@@ -36,37 +36,11 @@ BEGIN_C_DECLS
 typedef struct _window_manager_native_t {
   window_manager_t window_manager;
 
-  /*private*/
-  rect_t dirty_rect;
-  rect_t last_dirty_rect;
-
-  canvas_t* canvas;
-  bool_t animating;
-  bool_t ignore_user_input;
-  window_animator_t* animator;
-
-  uint32_t fps;
-  uint32_t fps_time;
-  uint32_t fps_count;
-  uint32_t last_paint_cost;
-
-  widget_t* pending_close_window;
-  widget_t* pending_open_window;
-
-  char* cursor;
-  rect_t r_cursor;
-
-  widget_t* system_bar;
-  input_device_status_t input_device_status;
-  uint32_t screen_saver_timer_id;
-  uint32_t screen_saver_time;
-
-  widget_t* prev_win;
-  native_window_t* native_window;
-  dialog_highlighter_t* dialog_highlighter;
-
   int32_t lcd_w;
   int32_t lcd_h;
+  canvas_t* canvas;
+  widget_t* prev_win;
+  input_device_status_t input_device_status;
 } window_manager_native_t;
 
 /**
