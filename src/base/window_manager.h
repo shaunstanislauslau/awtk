@@ -326,6 +326,10 @@ ret_t window_manager_back_to_home(widget_t* widget);
  */
 ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, void* handle);
 
+widget_t* window_manager_find_target_by_win(widget_t* widget, void* native_win);
+widget_t* window_manager_find_target(widget_t* widget, void* native_win, xy_t x, xy_t y);
+
+
 widget_t* window_manager_create(void);
 widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt,
                               const window_manager_vtable_t* vt);

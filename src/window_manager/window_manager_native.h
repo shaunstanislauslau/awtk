@@ -1,7 +1,7 @@
 ﻿/**
  * File:   window_manager.h
  * Author: AWTK Develop Team
- * Brief:  window manager
+ * Brief:  native window manager
  *
  * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
@@ -31,13 +31,14 @@ BEGIN_C_DECLS
  * @class window_manager_native_t
  * @parent window_manager_t
  * @annotation ["scriptable"]
- * 缺省窗口管理器。
+ * 用于管理native窗口的窗口管理器。
+ *
  */
 typedef struct _window_manager_native_t {
   window_manager_t window_manager;
 
-  int32_t lcd_w;
-  int32_t lcd_h;
+  /*private*/
+  /*一个可用的canvas，主要用于控件计算文本的大小，并不进行实际的绘制*/
   canvas_t* canvas;
   widget_t* prev_win;
   input_device_status_t input_device_status;
@@ -53,14 +54,6 @@ typedef struct _window_manager_native_t {
 widget_t* window_manager_create(void);
 
 #define WINDOW_MANAGER_NATIVE(widget) ((window_manager_native_t*)(widget))
-
-ret_t window_manager_paint_system_bar(widget_t* widget, canvas_t* c);
-
-/*public for window animator*/
-ret_t window_manager_snap_curr_window(widget_t* widget, widget_t* curr_win, bitmap_t* img,
-                                      framebuffer_object_t* fbo, bool_t auto_rotate);
-ret_t window_manager_snap_prev_window(widget_t* widget, widget_t* prev_win, bitmap_t* img,
-                                      framebuffer_object_t* fbo, bool_t auto_rotate);
 
 END_C_DECLS
 

@@ -371,3 +371,50 @@ ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, 
 
   return RET_OK;
 }
+
+widget_t* window_manager_find_target_by_win(widget_t* widget, void* win) {
+  native_window_t* nw = NULL;
+  return_value_if_fail(widget != NULL, NULL);
+
+  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
+  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+  if (nw->handle == win) {
+    return iter;
+  }
+  WIDGET_FOR_EACH_CHILD_END()
+
+  return NULL;
+}
+
+widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x, xy_t y) {
+  point_t p = {x, y};
+  native_window_t* nw = NULL;
+  return_value_if_fail(widget != NULL, NULL);
+
+  if (widget->grab_widget != NULL) {
+    return widget->grab_widget;
+  }
+
+  widget_to_local(widget, &p);
+  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
+  xy_t r = iter->x + iter->w;
+  xy_t b = iter->y + iter->h;
+
+  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+  if (nw == NULL || nw->handle != win) {
+    continue;
+  }
+
+  if (iter->visible && iter->sensitive && iter->enable && p.x >= iter->x && p.y >= iter->y &&
+      p.x <= r && p.y <= b) {
+    return iter;
+  }
+
+  if (widget_is_dialog(iter) || widget_is_popup(iter)) {
+    return iter;
+  }
+  WIDGET_FOR_EACH_CHILD_END()
+
+  return NULL;
+}
+

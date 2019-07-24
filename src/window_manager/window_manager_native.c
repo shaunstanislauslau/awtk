@@ -1,7 +1,7 @@
 /**
  * File:   window_manager_default.c
  * Author: AWTK Develop Team
- * Brief:  default window manager
+ * Brief:  native window manager
  *
  * Copyright (c) 2018 - 2019  Guangzhou ZHIYUAN Electronics Co.,Ltd.
  *
@@ -87,6 +87,7 @@ static ret_t window_manager_post_open(widget_t* window) {
     widget_t* widget = window->parent;
     xy_t x = (widget->w - window->w) >> 1;
     xy_t y = (widget->h - window->h) >> 1;
+
     widget_move(window, x, y);
   }
 
@@ -113,7 +114,7 @@ static ret_t window_manager_native_open_window(widget_t* widget, widget_t* windo
   return RET_OK;
 }
 
-static ret_t window_manager_idle_destroy_window(const idle_info_t* info) {
+static ret_t window_manager_destroy_window_async(const idle_info_t* info) {
   native_window_t* nw = NULL;
   widget_t* win = WIDGET(info->ctx);
 
@@ -129,58 +130,13 @@ static ret_t window_manager_idle_destroy_window(const idle_info_t* info) {
 
 static ret_t window_manager_native_close_window_force(widget_t* widget, widget_t* window) {
   widget_remove_child(widget, window);
-  idle_add(window_manager_idle_destroy_window, window);
+  idle_add(window_manager_destroy_window_async, window);
+
   return RET_OK;
 }
 
 static ret_t window_manager_native_close_window(widget_t* widget, widget_t* window) {
   return window_manager_close_window_force(widget, window);
-}
-
-static widget_t* window_manager_find_target_by_win(widget_t* widget, void* win) {
-  native_window_t* nw = NULL;
-  return_value_if_fail(widget != NULL, NULL);
-
-  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
-  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-  if (nw->handle == win) {
-    return iter;
-  }
-  WIDGET_FOR_EACH_CHILD_END()
-
-  return NULL;
-}
-
-static widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x, xy_t y) {
-  point_t p = {x, y};
-  native_window_t* nw = NULL;
-  return_value_if_fail(widget != NULL, NULL);
-
-  if (widget->grab_widget != NULL) {
-    return widget->grab_widget;
-  }
-
-  widget_to_local(widget, &p);
-  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
-  xy_t r = iter->x + iter->w;
-  xy_t b = iter->y + iter->h;
-
-  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-  if (nw == NULL || nw->handle != win) {
-    continue;
-  }
-
-  if (iter->visible && iter->sensitive && iter->enable && p.x >= iter->x && p.y >= iter->y &&
-      p.x <= r && p.y <= b) {
-    return iter;
-  }
-
-  if (widget_is_dialog(iter) || widget_is_popup(iter)) {
-    return iter;
-  }
-  WIDGET_FOR_EACH_CHILD_END()
-
-  return NULL;
 }
 
 static widget_t* window_manager_native_get_prev_window(widget_t* widget) {
@@ -240,12 +196,9 @@ static ret_t window_manager_native_paint(widget_t* widget) {
   return RET_OK;
 }
 
-static ret_t window_manager_on_remove_child(widget_t* widget, widget_t* window) {
-  return RET_FAIL;
-}
-
 static ret_t window_manager_get_prop(widget_t* widget, const char* name, value_t* v) {
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
+
   if (tk_str_eq(name, WIDGET_PROP_CANVAS)) {
     value_set_pointer(v, wm->canvas);
     return RET_OK;
@@ -259,10 +212,6 @@ static ret_t window_manager_set_prop(widget_t* widget, const char* name, const v
 }
 
 static ret_t window_manager_on_destroy(widget_t* widget) {
-  return RET_OK;
-}
-
-static ret_t window_manager_on_layout_children(widget_t* widget) {
   return RET_OK;
 }
 
@@ -409,8 +358,6 @@ static const widget_vtable_t s_window_manager_vtable = {
     .set_prop = window_manager_set_prop,
     .get_prop = window_manager_get_prop,
     .on_event = window_manager_on_event,
-    .on_layout_children = window_manager_on_layout_children,
-    .on_remove_child = window_manager_on_remove_child,
     .on_destroy = window_manager_on_destroy};
 
 widget_t* window_manager_create(void) {
