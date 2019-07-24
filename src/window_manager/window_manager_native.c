@@ -19,8 +19,8 @@
  *
  */
 
-#include "base/keys.h"
 #include "tkc/mem.h"
+#include "base/keys.h"
 #include "base/idle.h"
 #include "tkc/utils.h"
 #include "base/timer.h"
@@ -33,18 +33,10 @@
 #include "base/dialog_highlighter_factory.h"
 #include "window_manager/window_manager_native.h"
 
-static bool_t window_is_fullscreen(widget_t* widget) {
-  value_t v;
-  value_set_bool(&v, FALSE);
-  widget_get_prop(widget, WIDGET_PROP_FULLSCREEN, &v);
+static native_window_t* window_get_native_window(widget_t* win) {
+  return_value_if_fail(win != NULL, NULL);
 
-  return value_bool(&v);
-}
-
-static bool_t window_is_opened(widget_t* widget) {
-  int32_t stage = widget_get_prop_int(widget, WIDGET_PROP_STAGE, WINDOW_STAGE_NONE);
-
-  return stage == WINDOW_STAGE_OPENED;
+  return (native_window_t*)widget_get_prop_pointer(win, WIDGET_PROP_NATIVE_WINDOW);
 }
 
 static ret_t window_manager_dispatch_window_event(widget_t* window, event_type_t type) {
@@ -60,12 +52,29 @@ static ret_t window_manager_dispatch_window_event(widget_t* window, event_type_t
 
 static ret_t window_manager_dispatch_window_open(widget_t* curr_win) {
   window_manager_dispatch_window_event(curr_win, EVT_WINDOW_WILL_OPEN);
+  window_manager_dispatch_window_event(curr_win, EVT_WINDOW_OPEN);
 
-  return window_manager_dispatch_window_event(curr_win, EVT_WINDOW_OPEN);
+  return RET_OK;
+}
+
+static ret_t window_manager_create_native_window(widget_t* widget) {
+  native_window_t* nw = NULL;
+
+  if(tk_str_eq(widget_get_type(widget), WIDGET_TYPE_NORMAL_WINDOW)) {
+    nw = native_window_create(widget);
+  } else {
+    widget_t* prev =  window_manager_get_prev_window(widget->parent);
+    nw = (native_window_t*)widget_get_prop_pointer(prev, WIDGET_PROP_NATIVE_WINDOW);
+    object_ref(OBJECT(nw));
+  }
+  return_value_if_fail(nw != NULL, RET_BAD_PARAMS);
+
+  widget_set_prop_pointer(widget, WIDGET_PROP_NATIVE_WINDOW, nw);
+
+  return RET_OK;
 }
 
 static ret_t window_manager_idle_dispatch_window_open(const idle_info_t* info) {
-  native_window_t* nw = NULL;
   widget_t* window = WIDGET(info->ctx);
   return_value_if_fail(window != NULL, RET_REMOVE);
 
@@ -78,8 +87,7 @@ static ret_t window_manager_idle_dispatch_window_open(const idle_info_t* info) {
   }
 
   widget_layout(window);
-  nw = native_window_create(window);
-  widget_set_prop_pointer(window, WIDGET_PROP_NATIVE_WINDOW, nw);
+  window_manager_create_native_window(window);
   window_manager_dispatch_window_open(window);
 
   return RET_REMOVE;
@@ -184,10 +192,7 @@ static ret_t window_manager_paint_child(widget_t* widget, widget_t* child) {
     rect_t r = native_window_calc_dirty_rect(nw);
     if(r.w > 0 && r.h > 0) {
       canvas_t* c = native_window_get_canvas(nw);
-
-      canvas_begin_frame(c, &r, LCD_DRAW_NORMAL);
       widget_paint(child, c);
-      canvas_end_frame(c);
       native_window_update_last_dirty_rect(nw);
     }
   }
@@ -196,12 +201,29 @@ static ret_t window_manager_paint_child(widget_t* widget, widget_t* child) {
 }
 
 static ret_t window_manager_native_paint(widget_t* widget) {
+  rect_t r;
+  native_window_t* nw = NULL;
   window_manager_native_t* wm = WINDOW_MANAGER_NATIVE(widget);
   return_value_if_fail(widget != NULL, RET_BAD_PARAMS);
+  WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
+  if (iter->visible) {
+    nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+    
+    r = native_window_calc_dirty_rect(nw);
+    canvas_begin_frame(native_window_get_canvas(nw), &r, LCD_DRAW_NORMAL);
+  }
+  WIDGET_FOR_EACH_CHILD_END()
 
-  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
+  WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
   if (iter->visible) {
     window_manager_paint_child(widget, iter);
+  }
+  WIDGET_FOR_EACH_CHILD_END()
+  
+  WIDGET_FOR_EACH_CHILD_BEGIN(widget, iter, i)
+  if (iter->visible) {
+    nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+    canvas_end_frame(native_window_get_canvas(nw));
   }
   WIDGET_FOR_EACH_CHILD_END()
 
@@ -301,6 +323,10 @@ static ret_t window_manager_native_dispatch_input_event(widget_t* widget, event_
     target = window_manager_find_target_by_win(widget, e->native_window_handle);
   }
   input_device_status_on_input_event(ids, target, e);
+
+  if(e->type == EVT_POINTER_DOWN) {
+    wm->prev_win = target;
+  }
 
   return RET_OK;
 }

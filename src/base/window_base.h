@@ -23,6 +23,7 @@
 #define TK_WINDOW_BASE_H
 
 #include "base/widget.h"
+#include "base/native_window.h"
 
 BEGIN_C_DECLS
 
@@ -139,6 +140,7 @@ typedef struct _window_base_t {
   font_manager_t* font_manager;
   int32_t move_focus_prev_key;
   int32_t move_focus_next_key;
+  native_window_t* native_window;
 } window_base_t;
 
 /*for sub class*/
