@@ -69,8 +69,6 @@ static ret_t window_manager_create_native_window(widget_t* widget) {
   }
   return_value_if_fail(nw != NULL, RET_BAD_PARAMS);
 
-  widget_set_prop_pointer(widget, WIDGET_PROP_NATIVE_WINDOW, nw);
-
   return RET_OK;
 }
 
@@ -348,17 +346,16 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .get_prev_window = window_manager_native_get_prev_window,
     .close_window_force = window_manager_native_close_window_force,
     .dispatch_input_event = window_manager_native_dispatch_input_event,
-    .on_native_window_event = window_manager_native_dispatch_native_window_event,
+    .dispatch_native_window_event = window_manager_native_dispatch_native_window_event,
     .set_screen_saver_time = window_manager_native_set_screen_saver_time};
 
-static const widget_vtable_t s_window_manager_vtable = {
-    .size = sizeof(window_manager_t),
-    .is_window_manager = TRUE,
-    .type = WIDGET_TYPE_WINDOW_MANAGER,
-    .set_prop = window_manager_set_prop,
-    .get_prop = window_manager_get_prop,
-    .on_event = window_manager_on_event,
-    .on_destroy = window_manager_on_destroy};
+static const widget_vtable_t s_window_manager_vtable = {.size = sizeof(window_manager_t),
+                                                        .is_window_manager = TRUE,
+                                                        .type = WIDGET_TYPE_WINDOW_MANAGER,
+                                                        .set_prop = window_manager_set_prop,
+                                                        .get_prop = window_manager_get_prop,
+                                                        .on_event = window_manager_on_event,
+                                                        .on_destroy = window_manager_on_destroy};
 
 widget_t* window_manager_create(void) {
   window_manager_native_t* wm = TKMEM_ZALLOC(window_manager_native_t);

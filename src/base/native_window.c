@@ -70,6 +70,7 @@ rect_t native_window_calc_dirty_rect(native_window_t* win) {
 
   r = win->dirty_rect;
   ldr = &(win->last_dirty_rect);
+
   rect_merge(&r, ldr);
 
   return rect_fix(&r, win->rect.w, win->rect.h);
@@ -89,6 +90,18 @@ ret_t native_window_invalidate(native_window_t* win, rect_t* r) {
     dr->w = win->rect.w;
     dr->h = win->rect.h;
   }
+
+  return RET_OK;
+}
+
+ret_t native_window_on_resized(native_window_t* win, wh_t w, wh_t h) {
+  lcd_t* lcd = NULL;
+  return_value_if_fail(win != NULL, RET_BAD_PARAMS);
+
+  lcd = native_window_get_canvas(win)->lcd;
+  return_value_if_fail(lcd != NULL, RET_BAD_PARAMS);
+
+  lcd_resize(lcd, w, h, 0);
 
   return RET_OK;
 }

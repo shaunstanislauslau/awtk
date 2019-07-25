@@ -208,6 +208,10 @@ ret_t window_base_invalidate(widget_t* widget, rect_t* r) {
 
   nw = (native_window_t*)widget_get_prop_pointer(widget, WIDGET_PROP_NATIVE_WINDOW);
   if (nw != NULL) {
+    if (nw->shared) {
+      r->x += widget->x;
+      r->y += widget->y;
+    }
     native_window_invalidate(nw, r);
   }
 

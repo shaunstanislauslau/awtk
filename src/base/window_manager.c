@@ -365,8 +365,8 @@ ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, 
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(widget != NULL && e != NULL && handle != NULL, RET_BAD_PARAMS);
 
-  if (wm->vt->on_native_window_event != NULL) {
-    wm->vt->on_native_window_event(widget, e, handle);
+  if (wm->vt->dispatch_native_window_event != NULL) {
+    wm->vt->dispatch_native_window_event(widget, e, handle);
   }
 
   return RET_OK;
@@ -400,9 +400,11 @@ widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x, xy_t y
   xy_t r = iter->x + iter->w;
   xy_t b = iter->y + iter->h;
 
-  nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-  if (nw == NULL || nw->handle != win) {
-    continue;
+  if (win != NULL) {
+    nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
+    if (nw == NULL || nw->handle != win) {
+      continue;
+    }
   }
 
   if (iter->visible && iter->sensitive && iter->enable && p.x >= iter->x && p.y >= iter->y &&
@@ -417,4 +419,3 @@ widget_t* window_manager_find_target(widget_t* widget, void* win, xy_t x, xy_t y
 
   return NULL;
 }
-

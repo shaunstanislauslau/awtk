@@ -65,7 +65,7 @@ typedef struct _window_manager_vtable_t {
   window_manager_close_window_force_t close_window_force;
   window_manager_get_top_main_window_t get_top_main_window;
   window_manager_dispatch_input_event_t dispatch_input_event;
-  window_manager_dispatch_native_window_event_t on_native_window_event;
+  window_manager_dispatch_native_window_event_t dispatch_native_window_event;
   window_manager_set_screen_saver_time_t set_screen_saver_time;
   window_manager_get_pointer_t get_pointer;
 } window_manager_vtable_t;
@@ -328,7 +328,6 @@ ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, 
 
 widget_t* window_manager_find_target_by_win(widget_t* widget, void* native_win);
 widget_t* window_manager_find_target(widget_t* widget, void* native_win, xy_t x, xy_t y);
-
 
 widget_t* window_manager_create(void);
 widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt,

@@ -26,6 +26,7 @@
 
 typedef struct _native_window_sdl_t {
   native_window_t native_window;
+
   SDL_Renderer* render;
   SDL_Window* window;
   canvas_t canvas;
@@ -58,6 +59,7 @@ static ret_t native_window_sdl_resize(native_window_t* win, wh_t w, wh_t h) {
   win->rect.w = w;
   win->rect.h = h;
   SDL_GetWindowSize(sdl->window, &oldw, &oldh);
+
   if (w != oldw || h != oldh) {
     SDL_SetWindowSize(sdl->window, w, h);
   }
@@ -97,6 +99,7 @@ static const native_window_vtable_t s_native_window_vtable = {
 static ret_t native_window_sdl_set_prop(object_t* obj, const char* name, const value_t* v) {
   native_window_t* win = NATIVE_WINDOW(obj);
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
+
   if (tk_str_eq(NATIVE_WINDOW_PROP_SIZE, name)) {
     rect_t* r = (rect_t*)value_pointer(v);
     native_window_sdl_resize(win, r->w, r->h);
@@ -108,6 +111,7 @@ static ret_t native_window_sdl_set_prop(object_t* obj, const char* name, const v
 
     return RET_OK;
   }
+
   return RET_NOT_FOUND;
 }
 
@@ -126,6 +130,8 @@ static ret_t native_window_sdl_get_prop(object_t* obj, const char* name, value_t
     SDL_GetWindowPosition(sdlwin, &x, &y);
     win->rect = rect_init(x, y, w, h);
     value_set_pointer(v, &(win->rect));
+
+    return RET_OK;
   }
 
   return RET_NOT_FOUND;
@@ -161,17 +167,16 @@ static native_window_t* native_window_create_internal(const char* title, uint32_
 #ifndef WITH_NANOVG_SOFT
   flags |= SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI;
 #endif /*WITH_NANOVG_SOFT*/
+
   sdl->window = SDL_CreateWindow(title, x, y, w, h, flags);
+
 #ifdef WITH_NANOVG_SOFT
   sdl->render =
       SDL_CreateRenderer(sdl->window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
 #endif /*WITH_NANOVG_SOFT*/
 
-  win->rect.x = x;
-  win->rect.y = y;
-  win->rect.w = w;
-  win->rect.h = h;
   win->handle = sdl->window;
+  win->rect = rect_init(x, y, w, h);
   win->vt = &s_native_window_vtable;
 
 #ifdef WITH_NANOVG_SOFT
@@ -198,23 +203,14 @@ native_window_t* native_window_create(widget_t* widget) {
     nw = s_shared_win;
   } else {
     str_t str;
-    uint32_t flags = 0;
 
     str_init(&str, 0);
     str_from_wstr(&str, widget->text.str);
-
-    flags = SDL_WINDOW_MAXIMIZED;
-    // flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-    // flags = SDL_WINDOW_BORDERLESS;
-    // flags = SDL_WINDOW_MOUSE_CAPTURE;
-    if (widget_is_popup(widget) || widget_is_dialog(widget)) {
-      flags = SDL_WINDOW_BORDERLESS | SDL_WINDOW_MOUSE_CAPTURE;
-    } else {
-      flags = SDL_WINDOW_MAXIMIZED;
-    }
-    nw = native_window_create_internal(str.str, flags, x, y, w, h);
+    nw = native_window_create_internal(str.str, 0, x, y, w, h);
     str_reset(&str);
   }
+
+  widget_set_prop_pointer(widget, WIDGET_PROP_NATIVE_WINDOW, nw);
 
   return nw;
 }

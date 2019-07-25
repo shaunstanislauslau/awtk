@@ -33,9 +33,9 @@
 #include "base/dialog_highlighter_factory.h"
 #include "window_manager/window_manager_default.h"
 
-static ret_t window_manager_invalidate(widget_t* widget, rect_t* r);
 static ret_t window_manager_inc_fps(widget_t* widget);
 static ret_t window_manager_update_fps(widget_t* widget);
+static ret_t window_manager_invalidate(widget_t* widget, rect_t* r);
 static ret_t window_manager_do_open_window(widget_t* wm, widget_t* window);
 static ret_t window_manager_layout_child(widget_t* widget, widget_t* window);
 static ret_t window_manager_create_dialog_highlighter(widget_t* widget, widget_t* curr_win);
@@ -407,6 +407,7 @@ static ret_t window_manager_default_open_window(widget_t* widget, widget_t* wind
     wm->system_bar = window;
   }
 
+  widget_set_prop_pointer(window, WIDGET_PROP_NATIVE_WINDOW, wm->native_window);
   widget_on(window, EVT_DESTROY, wm_on_destroy_child, widget);
   widget_update_style(widget);
 
@@ -492,30 +493,8 @@ static ret_t window_manager_default_close_window_force(widget_t* widget, widget_
   return RET_OK;
 }
 
-static widget_t* window_manager_find_target(widget_t* widget, xy_t x, xy_t y) {
-  point_t p = {x, y};
-  return_value_if_fail(widget != NULL, NULL);
-
-  if (widget->grab_widget != NULL) {
-    return widget->grab_widget;
-  }
-
-  widget_to_local(widget, &p);
-  WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
-  xy_t r = iter->x + iter->w;
-  xy_t b = iter->y + iter->h;
-
-  if (iter->visible && iter->sensitive && iter->enable && p.x >= iter->x && p.y >= iter->y &&
-      p.x <= r && p.y <= b) {
-    return iter;
-  }
-
-  if (widget_is_dialog(iter) || widget_is_popup(iter)) {
-    return iter;
-  }
-  WIDGET_FOR_EACH_CHILD_END()
-
-  return NULL;
+static widget_t* window_manager_default_find_target(widget_t* widget, xy_t x, xy_t y) {
+  return window_manager_find_target(widget, NULL, x, y);
 }
 
 static rect_t window_manager_calc_dirty_rect(window_manager_default_t* wm) {
@@ -1005,6 +984,32 @@ ret_t window_manager_paint_system_bar(widget_t* widget, canvas_t* c) {
   return RET_OK;
 }
 
+static ret_t window_manager_native_on_native_window_closed(widget_t* widget, void* handle) {
+  tk_quit();
+
+  return RET_OK;
+}
+
+static ret_t window_manager_native_native_window_resized(widget_t* widget, void* handle) {
+  native_window_t* nw = WINDOW_MANAGER_DEFAULT(widget)->native_window;
+  rect_t* r = (rect_t*)object_get_prop_pointer(OBJECT(nw), NATIVE_WINDOW_PROP_SIZE);
+
+  window_manager_resize(widget, r->w, r->h);
+  native_window_on_resized(nw, r->w, r->h);
+
+  return RET_OK;
+}
+
+static ret_t window_manager_native_dispatch_native_window_event(widget_t* widget, event_t* e,
+                                                                void* handle) {
+  if (e->type == EVT_NATIVE_WINDOW_DESTROY) {
+    window_manager_native_on_native_window_closed(widget, handle);
+  } else if (e->type == EVT_NATIVE_WINDOW_RESIZED) {
+    window_manager_native_native_window_resized(widget, handle);
+  }
+  return RET_OK;
+}
+
 static window_manager_vtable_t s_window_manager_self_vtable = {
     .paint = window_manager_default_paint,
     .resize = window_manager_default_resize,
@@ -1017,6 +1022,7 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .get_prev_window = window_manager_default_get_prev_window,
     .close_window_force = window_manager_default_close_window_force,
     .dispatch_input_event = window_manager_default_dispatch_input_event,
+    .dispatch_native_window_event = window_manager_native_dispatch_native_window_event,
     .set_screen_saver_time = window_manager_default_set_screen_saver_time};
 
 static const widget_vtable_t s_window_manager_vtable = {
@@ -1030,7 +1036,7 @@ static const widget_vtable_t s_window_manager_vtable = {
     .on_layout_children = window_manager_on_layout_children,
     .on_paint_children = window_manager_on_paint_children,
     .on_remove_child = window_manager_on_remove_child,
-    .find_target = window_manager_find_target,
+    .find_target = window_manager_default_find_target,
     .on_destroy = window_manager_on_destroy};
 
 widget_t* window_manager_create(void) {
