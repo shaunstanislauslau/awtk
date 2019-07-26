@@ -75,7 +75,7 @@ static const object_vtable_t s_native_window_raw_vtable = {
     .set_prop = native_window_raw_set_prop,
     .on_destroy = native_window_raw_on_destroy};
 
-static native_window_t* native_window_create_internal(lcd_t* lcd){
+static native_window_t* native_window_create_internal(lcd_t* lcd) {
   object_t* obj = object_create(&s_native_window_raw_vtable);
   native_window_t* win = NATIVE_WINDOW(obj);
   native_window_raw_t* raw = NATIVE_WINDOW_RAW(win);

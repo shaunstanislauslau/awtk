@@ -109,9 +109,9 @@ ret_t native_window_on_resized(native_window_t* win, wh_t w, wh_t h) {
 ret_t native_window_begin_frame(native_window_t* win, lcd_draw_mode_t mode) {
   return_value_if_fail(win != NULL, RET_BAD_PARAMS);
 
-  if(win->dirty_rect.w > 0 && win->dirty_rect.h > 0) {
+  if (win->dirty_rect.w > 0 && win->dirty_rect.h > 0) {
     rect_t r = native_window_calc_dirty_rect(win);
-    if(r.w > 0 && r.h > 0) {
+    if (r.w > 0 && r.h > 0) {
       canvas_t* c = native_window_get_canvas(win);
       canvas_begin_frame(c, &r, mode);
       win->dirty = TRUE;
@@ -125,7 +125,7 @@ ret_t native_window_begin_frame(native_window_t* win, lcd_draw_mode_t mode) {
 ret_t native_window_paint(native_window_t* win, widget_t* widget) {
   return_value_if_fail(win != NULL && widget != NULL, RET_BAD_PARAMS);
 
-  if(win->dirty && widget->visible) {
+  if (win->dirty && widget->visible) {
     canvas_t* c = native_window_get_canvas(win);
     widget_paint(widget, c);
     log_debug("paint:%s\n", widget->name);
@@ -137,7 +137,7 @@ ret_t native_window_paint(native_window_t* win, widget_t* widget) {
 ret_t native_window_end_frame(native_window_t* win) {
   return_value_if_fail(win != NULL, RET_BAD_PARAMS);
 
-  if(win->dirty) {
+  if (win->dirty) {
     canvas_t* c = native_window_get_canvas(win);
     canvas_end_frame(c);
     native_window_update_last_dirty_rect(win);
@@ -148,4 +148,3 @@ ret_t native_window_end_frame(native_window_t* win) {
 
   return RET_OK;
 }
-

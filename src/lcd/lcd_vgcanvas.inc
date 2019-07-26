@@ -224,7 +224,11 @@ static ret_t lcd_vgcanvas_end_frame(lcd_t* lcd) {
 }
 
 static ret_t lcd_vgcanvas_destroy(lcd_t* lcd) {
-  (void)lcd;
+  vgcanvas_t* canvas = LCD(lcd)->canvas;
+  vgcanvas_destroy(canvas);
+  memset(lcd, 0x00, sizeof(lcd_t));
+  TKMEM_FREE(lcd);
+
   return RET_OK;
 }
 

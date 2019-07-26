@@ -69,6 +69,10 @@ static ret_t native_window_sdl_resize(native_window_t* win, wh_t w, wh_t h) {
 
 static ret_t native_window_sdl_close(native_window_t* win) {
   native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
+  lcd_t* lcd = sdl->canvas.lcd;
+
+  canvas_reset(&(sdl->canvas));
+  lcd_destroy(lcd);
 
   if (sdl->render != NULL) {
     SDL_DestroyRenderer(sdl->render);

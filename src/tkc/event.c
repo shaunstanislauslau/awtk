@@ -31,7 +31,7 @@ event_t event_init(uint32_t type, void* target) {
   e.type = type;
   e.target = target;
   e.time = time_now_ms();
-  
+
   return e;
 }
 
