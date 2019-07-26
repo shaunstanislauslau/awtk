@@ -378,7 +378,7 @@ widget_t* window_manager_find_target_by_win(widget_t* widget, void* win) {
 
   WIDGET_FOR_EACH_CHILD_BEGIN_R(widget, iter, i)
   nw = (native_window_t*)widget_get_prop_pointer(iter, WIDGET_PROP_NATIVE_WINDOW);
-  if (nw->handle == win) {
+  if (nw != NULL && nw->handle == win) {
     return iter;
   }
   WIDGET_FOR_EACH_CHILD_END()

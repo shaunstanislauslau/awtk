@@ -20,6 +20,7 @@
  */
 
 #include "base/lcd.h"
+#include "tkc/mem.h"
 #include "tkc/utf8.h"
 #include "base/vgcanvas.h"
 #include "base/system_info.h"
@@ -239,12 +240,10 @@ static bitmap_format_t lcd_vgcanvas_get_desired_bitmap_format(lcd_t* lcd) {
 }
 
 lcd_t* lcd_vgcanvas_init(wh_t w, wh_t h, vgcanvas_t* canvas) {
-  static lcd_vgcanvas_t lcd;
-  lcd_t* base = &(lcd.base);
+  lcd_vgcanvas_t* lcd = TKMEM_ZALLOC(lcd_vgcanvas_t);
+  lcd_t* base = &(lcd->base);
   system_info_t* info = system_info();
   return_value_if_fail(canvas != NULL, NULL);
-
-  memset(&lcd, 0x00, sizeof(lcd_vgcanvas_t));
 
   base->begin_frame = lcd_vgcanvas_begin_frame;
   base->set_clip_rect = lcd_vgcanvas_set_clip_rect;
@@ -280,7 +279,7 @@ lcd_t* lcd_vgcanvas_init(wh_t w, wh_t h, vgcanvas_t* canvas) {
   system_info_set_lcd_type(info, base->type);
   system_info_set_device_pixel_ratio(info, canvas->ratio);
 
-  lcd.canvas = canvas;
+  lcd->canvas = canvas;
 
   return base;
 }
