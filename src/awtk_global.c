@@ -202,6 +202,9 @@ ret_t tk_deinit_internal(void) {
 
   widget_animator_manager_destroy(widget_animator_manager());
   widget_animator_manager_set(NULL);
+  
+  image_manager_destroy(image_manager());
+  image_manager_set(NULL);
 
   idle_manager_destroy(idle_manager());
   idle_manager_set(NULL);
@@ -211,15 +214,15 @@ ret_t tk_deinit_internal(void) {
 
   widget_factory_destroy(widget_factory());
   widget_factory_set(NULL);
+  
+  widget_destroy(window_manager());
+  window_manager_set(NULL);
 
   input_method_destroy(input_method());
   input_method_set(NULL);
 
   theme_destroy(theme());
   theme_set(NULL);
-
-  image_manager_destroy(image_manager());
-  image_manager_set(NULL);
 
   font_manager_destroy(font_manager());
   font_manager_set(NULL);
@@ -234,9 +237,6 @@ ret_t tk_deinit_internal(void) {
 
   assets_manager_destroy(assets_manager());
   assets_manager_set(NULL);
-
-  widget_destroy(window_manager());
-  window_manager_set(NULL);
 
   system_info_deinit();
 

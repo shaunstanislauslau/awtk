@@ -139,7 +139,6 @@ ret_t native_window_end_frame(native_window_t* win) {
     canvas_t* c = native_window_get_canvas(win);
     canvas_end_frame(c);
     native_window_update_last_dirty_rect(win);
-    log_debug("end_frame\n");
   }
   native_window_clear_dirty_rect(win);
 
