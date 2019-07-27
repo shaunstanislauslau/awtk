@@ -23,9 +23,9 @@
 #include <emscripten.h>
 #endif /*AWTK_WEB*/
 
+#include "base/window_manager.h"
 #include "base/window_animator.h"
 #include "base/dialog_highlighter_factory.h"
-#include "window_manager/window_manager_default.h"
 
 #include "window_animators/window_animator_common.h"
 
@@ -171,17 +171,17 @@ ret_t window_animator_destroy(window_animator_t* wa) {
 /******************helper******************/
 
 static ret_t window_animator_paint_system_bar(window_animator_t* wa) {
-  window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(wa->curr_win->parent);
+  widget_t* wm = wa->curr_win->parent;
+  widget_t* system_bar = widget_lookup_by_type(wm, WIDGET_TYPE_SYSTEM_BAR, TRUE);
 
-  if (wm->system_bar != NULL) {
+  if (system_bar != NULL) {
 #ifdef AWTK_WEB
-    widget_t* widget = wm->system_bar;
-    rect_t src = rect_init(widget->x, widget->y, widget->w, widget->h);
-    rect_t dst = rect_init(widget->x, widget->y, widget->w, widget->h);
+    rect_t src = rect_init(system_bar->x, system_bar->y, system_bar->w, system_bar->h);
+    rect_t dst = rect_init(system_bar->x, system_bar->y, system_bar->w, system_bar->h);
     canvas_draw_image(wa->canvas, &(wa->prev_img), rect_scale(&src, wa->ratio), &dst);
 #else
     if (!(wa->canvas->lcd->support_dirty_rect)) {
-      widget_paint(wm->system_bar, wa->canvas);
+      widget_paint(system_bar, wa->canvas);
     }
 #endif /*AWTK_WEB*/
   }
@@ -253,7 +253,7 @@ ret_t window_animator_prepare(window_animator_t* wa, canvas_t* c, widget_t* prev
   window_animator_init(wa);
   window_manager_snap_prev_window(wm, prev_win, &(wa->prev_img), &(wa->prev_fbo), auto_rotate);
   window_manager_snap_curr_window(wm, curr_win, &(wa->curr_img), &(wa->curr_fbo), auto_rotate);
-  wa->dialog_highlighter = WINDOW_MANAGER_DEFAULT(wm)->dialog_highlighter;
+  wa->dialog_highlighter = window_manager_get_dialog_highlighter(wm);
 
   return RET_OK;
 }

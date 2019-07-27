@@ -79,12 +79,6 @@ widget_t* window_manager_create(void);
 
 ret_t window_manager_paint_system_bar(widget_t* widget, canvas_t* c);
 
-/*public for window animator*/
-ret_t window_manager_snap_curr_window(widget_t* widget, widget_t* curr_win, bitmap_t* img,
-                                      framebuffer_object_t* fbo, bool_t auto_rotate);
-ret_t window_manager_snap_prev_window(widget_t* widget, widget_t* prev_win, bitmap_t* img,
-                                      framebuffer_object_t* fbo, bool_t auto_rotate);
-
 END_C_DECLS
 
 #endif /*TK_WINDOW_MANAGER_DEFAULT_H*/

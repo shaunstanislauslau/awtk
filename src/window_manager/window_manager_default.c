@@ -125,7 +125,7 @@ static widget_t* window_manager_find_prev_window(widget_t* widget) {
   return NULL;
 }
 
-ret_t window_manager_snap_curr_window(widget_t* widget, widget_t* curr_win, bitmap_t* img,
+ret_t window_manager_default_snap_curr_window(widget_t* widget, widget_t* curr_win, bitmap_t* img,
                                       framebuffer_object_t* fbo, bool_t auto_rotate) {
   canvas_t* c = NULL;
 #ifdef WITH_NANOVG_GPU
@@ -163,7 +163,7 @@ ret_t window_manager_snap_curr_window(widget_t* widget, widget_t* curr_win, bitm
   return RET_OK;
 }
 
-ret_t window_manager_snap_prev_window(widget_t* widget, widget_t* prev_win, bitmap_t* img,
+ret_t window_manager_default_snap_prev_window(widget_t* widget, widget_t* prev_win, bitmap_t* img,
                                       framebuffer_object_t* fbo, bool_t auto_rotate) {
   canvas_t* c = NULL;
 #ifdef WITH_NANOVG_GPU
@@ -229,6 +229,13 @@ static ret_t window_manager_on_highlighter_destroy(void* ctx, event_t* e) {
   return RET_OK;
 }
 
+static dialog_highlighter_t* window_manager_default_get_dialog_highlighter(widget_t* widget) {
+  window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
+
+  return wm->dialog_highlighter;
+}
+
+
 static ret_t window_manager_create_dialog_highlighter(widget_t* widget, widget_t* curr_win) {
   value_t v;
   ret_t ret = RET_FAIL;
@@ -260,7 +267,7 @@ static ret_t window_manager_prepare_dialog_highlighter(widget_t* widget, widget_
   if (window_manager_create_dialog_highlighter(widget, curr_win) == RET_OK) {
     bitmap_t img = {0};
     framebuffer_object_t fbo = {0};
-    window_manager_snap_prev_window(widget, prev_win, &img, &fbo, TRUE);
+    window_manager_default_snap_prev_window(widget, prev_win, &img, &fbo, TRUE);
 
     return RET_OK;
   }
@@ -984,12 +991,6 @@ ret_t window_manager_paint_system_bar(widget_t* widget, canvas_t* c) {
   return RET_OK;
 }
 
-static ret_t window_manager_native_on_native_window_closed(widget_t* widget, void* handle) {
-  tk_quit();
-
-  return RET_OK;
-}
-
 static ret_t window_manager_native_native_window_resized(widget_t* widget, void* handle) {
   native_window_t* nw = WINDOW_MANAGER_DEFAULT(widget)->native_window;
   rect_t* r = (rect_t*)object_get_prop_pointer(OBJECT(nw), NATIVE_WINDOW_PROP_SIZE);
@@ -1001,12 +1002,11 @@ static ret_t window_manager_native_native_window_resized(widget_t* widget, void*
 }
 
 static ret_t window_manager_native_dispatch_native_window_event(widget_t* widget, event_t* e,
-                                                                void* handle) {
-  if (e->type == EVT_NATIVE_WINDOW_DESTROY) {
-    window_manager_native_on_native_window_closed(widget, handle);
-  } else if (e->type == EVT_NATIVE_WINDOW_RESIZED) {
+   void* handle) {
+  if (e->type == EVT_NATIVE_WINDOW_RESIZED) {
     window_manager_native_native_window_resized(widget, handle);
   }
+
   return RET_OK;
 }
 
@@ -1023,6 +1023,9 @@ static window_manager_vtable_t s_window_manager_self_vtable = {
     .close_window_force = window_manager_default_close_window_force,
     .dispatch_input_event = window_manager_default_dispatch_input_event,
     .dispatch_native_window_event = window_manager_native_dispatch_native_window_event,
+    .snap_curr_window = window_manager_default_snap_curr_window,
+    .snap_prev_window = window_manager_default_snap_prev_window,
+    .get_dialog_highlighter = window_manager_default_get_dialog_highlighter,
     .set_screen_saver_time = window_manager_default_set_screen_saver_time};
 
 static const widget_vtable_t s_window_manager_vtable = {
