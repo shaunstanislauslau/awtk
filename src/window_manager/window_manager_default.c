@@ -504,10 +504,6 @@ static widget_t* window_manager_default_find_target(widget_t* widget, xy_t x, xy
   return window_manager_find_target(widget, NULL, x, y);
 }
 
-static rect_t window_manager_calc_dirty_rect(window_manager_default_t* wm) {
-  return native_window_calc_dirty_rect(wm->native_window);
-}
-
 static ret_t window_manager_paint_cursor(widget_t* widget, canvas_t* c) {
   bitmap_t bitmap;
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
@@ -547,8 +543,8 @@ static ret_t window_manager_update_cursor(widget_t* widget, int32_t x, int32_t y
 }
 
 static ret_t window_manager_paint_normal(widget_t* widget, canvas_t* c) {
+  uint32_t start_time = time_now_ms();
   window_manager_default_t* wm = WINDOW_MANAGER_DEFAULT(widget);
-  rect_t* dr = &(wm->native_window->dirty_rect);
 
   window_manager_inc_fps(widget);
 
@@ -557,25 +553,13 @@ static ret_t window_manager_paint_normal(widget_t* widget, canvas_t* c) {
     window_manager_invalidate(widget, &fps_rect);
   }
 
-  if (dr->w && dr->h) {
-    uint32_t start_time = time_now_ms();
-    rect_t r = window_manager_calc_dirty_rect(wm);
+  ENSURE(native_window_begin_frame(wm->native_window, LCD_DRAW_NORMAL) == RET_OK);
 
-    if (r.w > 0 && r.h > 0) {
-      ENSURE(canvas_begin_frame(c, &r, LCD_DRAW_NORMAL) == RET_OK);
-      ENSURE(widget_paint(WIDGET(wm), c) == RET_OK);
-      window_manager_paint_cursor(widget, c);
-      ENSURE(canvas_end_frame(c) == RET_OK);
-      wm->last_paint_cost = time_now_ms() - start_time;
-      native_window_update_last_dirty_rect(wm->native_window);
-      /*
-        log_debug("%s x=%d y=%d w=%d h=%d cost=%d\n", __FUNCTION__, (int)(r.x), (int)(r.y),
-                (int)(r.w), (int)(r.h), (int)wm->last_paint_cost);
-      */
-    }
-  }
+  ENSURE(widget_paint(WIDGET(wm), c) == RET_OK);
+  window_manager_paint_cursor(widget, c);
 
-  wm->native_window->dirty_rect = rect_init(widget->w, widget->h, 0, 0);
+  native_window_end_frame(wm->native_window);
+  wm->last_paint_cost = time_now_ms() - start_time;
 
   return RET_OK;
 }
@@ -839,7 +823,7 @@ static ret_t window_manager_on_event(widget_t* widget, event_t* e) {
     }
 
     lcd_resize(lcd, w, h, 0);
-    window_manager_resize(window_manager(), w, h);
+    window_manager_default_resize(widget, w, h);
     e->type = EVT_ORIENTATION_CHANGED;
 
     widget_dispatch(widget, e);
@@ -995,7 +979,7 @@ static ret_t window_manager_native_native_window_resized(widget_t* widget, void*
   native_window_t* nw = WINDOW_MANAGER_DEFAULT(widget)->native_window;
   rect_t* r = (rect_t*)object_get_prop_pointer(OBJECT(nw), NATIVE_WINDOW_PROP_SIZE);
 
-  window_manager_resize(widget, r->w, r->h);
+  window_manager_default_resize(widget, r->w, r->h);
   native_window_on_resized(nw, r->w, r->h);
 
   return RET_OK;
@@ -1012,7 +996,6 @@ static ret_t window_manager_native_dispatch_native_window_event(widget_t* widget
 
 static window_manager_vtable_t s_window_manager_self_vtable = {
     .paint = window_manager_default_paint,
-    .resize = window_manager_default_resize,
     .post_init = window_manager_default_post_init,
     .set_cursor = window_manager_default_set_cursor,
     .open_window = window_manager_default_open_window,

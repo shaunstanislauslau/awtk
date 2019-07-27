@@ -115,7 +115,6 @@ ret_t native_window_begin_frame(native_window_t* win, lcd_draw_mode_t mode) {
       canvas_t* c = native_window_get_canvas(win);
       canvas_begin_frame(c, &r, mode);
       win->dirty = TRUE;
-      log_debug("dirty rect: %d %d %d %d\n", r.x, r.y, r.w, r.h);
     }
   }
 
@@ -128,7 +127,6 @@ ret_t native_window_paint(native_window_t* win, widget_t* widget) {
   if (win->dirty && widget->visible) {
     canvas_t* c = native_window_get_canvas(win);
     widget_paint(widget, c);
-    log_debug("paint:%s\n", widget->name);
   }
 
   return RET_OK;
@@ -141,9 +139,17 @@ ret_t native_window_end_frame(native_window_t* win) {
     canvas_t* c = native_window_get_canvas(win);
     canvas_end_frame(c);
     native_window_update_last_dirty_rect(win);
-    win->dirty = FALSE;
     log_debug("end_frame\n");
   }
+  native_window_clear_dirty_rect(win);
+
+  return RET_OK;
+}
+
+ret_t native_window_clear_dirty_rect(native_window_t* win) {
+  return_value_if_fail(win != NULL, RET_BAD_PARAMS);
+
+  win->dirty = FALSE;
   win->dirty_rect = rect_init(win->rect.w, win->rect.h, 0, 0);
 
   return RET_OK;

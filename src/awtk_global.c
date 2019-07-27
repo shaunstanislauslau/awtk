@@ -185,9 +185,6 @@ ret_t tk_init(wh_t w, wh_t h, app_type_t app_type, const char* app_name, const c
 }
 
 ret_t tk_deinit_internal(void) {
-  widget_destroy(window_manager());
-  window_manager_set(NULL);
-
   clip_board_destroy(clip_board());
   clip_board_set(NULL);
 
@@ -237,6 +234,9 @@ ret_t tk_deinit_internal(void) {
 
   assets_manager_destroy(assets_manager());
   assets_manager_set(NULL);
+
+  widget_destroy(window_manager());
+  window_manager_set(NULL);
 
   system_info_deinit();
 

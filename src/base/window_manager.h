@@ -33,7 +33,6 @@ BEGIN_C_DECLS
 typedef widget_t* (*window_manager_get_top_window_t)(widget_t* widget);
 typedef widget_t* (*window_manager_get_prev_window_t)(widget_t* widget);
 typedef widget_t* (*window_manager_get_top_main_window_t)(widget_t* widget);
-typedef ret_t (*window_manager_resize_t)(widget_t* widget, wh_t w, wh_t h);
 typedef ret_t (*window_manager_open_window_t)(widget_t* widget, widget_t* window);
 typedef ret_t (*window_manager_close_window_t)(widget_t* widget, widget_t* window);
 typedef ret_t (*window_manager_close_window_force_t)(widget_t* widget, widget_t* window);
@@ -57,7 +56,6 @@ typedef dialog_highlighter_t* (*window_manager_get_dialog_highlighter_t)(widget_
 typedef struct _window_manager_vtable_t {
   window_manager_back_t back;
   window_manager_paint_t paint;
-  window_manager_resize_t resize;
   window_manager_post_init_t post_init;
   window_manager_set_cursor_t set_cursor;
   window_manager_open_window_t open_window;
@@ -192,18 +190,6 @@ bool_t window_manager_get_pointer_pressed(widget_t* widget);
 ret_t window_manager_post_init(widget_t* widget, wh_t w, wh_t h);
 
 /**
- * @method window_manager_resize
- * 调整窗口管理器的大小。
- * @annotation ["private"]
- * @param {widget_t*} widget 窗口管理器对象。
- * @param {wh_t}   w 宽度
- * @param {wh_t}   h 高度
- *
- * @return {ret_t} 返回RET_OK表示成功，否则表示失败。
- */
-ret_t window_manager_resize(widget_t* widget, wh_t w, wh_t h);
-
-/**
  * @method window_manager_open_window
  * 打开窗口。
  * @annotation ["private"]
@@ -333,11 +319,18 @@ ret_t window_manager_back_to_home(widget_t* widget);
  */
 ret_t window_manager_dispatch_native_window_event(widget_t* widget, event_t* e, void* handle);
 
-ret_t window_manager_snap_curr_window(widget_t* widget, widget_t* curr_win, bitmap_t* img, framebuffer_object_t* fbo, bool_t auto_rotate);
-ret_t window_manager_snap_prev_window(widget_t* widget, widget_t* prev_win, bitmap_t* img, framebuffer_object_t* fbo, bool_t auto_rotate);
+/*public for animators*/
+ret_t window_manager_snap_curr_window(widget_t* widget, 
+    widget_t* curr_win, bitmap_t* img, framebuffer_object_t* fbo, bool_t auto_rotate);
+
+ret_t window_manager_snap_prev_window(widget_t* widget, 
+    widget_t* prev_win, bitmap_t* img, framebuffer_object_t* fbo, bool_t auto_rotate);
+
 dialog_highlighter_t* window_manager_get_dialog_highlighter(widget_t* widget);
 
 widget_t* window_manager_create(void);
+
+/*helper for sub class*/
 widget_t* window_manager_init(window_manager_t* wm, const widget_vtable_t* wvt,
                               const window_manager_vtable_t* vt);
 

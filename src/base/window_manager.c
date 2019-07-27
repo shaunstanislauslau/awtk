@@ -189,14 +189,6 @@ widget_t* window_manager_get_prev_window(widget_t* widget) {
   return wm->vt->get_prev_window(widget);
 }
 
-ret_t window_manager_resize(widget_t* widget, wh_t w, wh_t h) {
-  window_manager_t* wm = WINDOW_MANAGER(widget);
-  return_value_if_fail(wm != NULL && wm->vt != NULL, RET_BAD_PARAMS);
-  return_value_if_fail(wm->vt->resize != NULL, RET_BAD_PARAMS);
-
-  return wm->vt->resize(widget, w, h);
-}
-
 ret_t window_manager_post_init(widget_t* widget, wh_t w, wh_t h) {
   window_manager_t* wm = WINDOW_MANAGER(widget);
   return_value_if_fail(wm != NULL && wm->vt != NULL, RET_BAD_PARAMS);
@@ -452,6 +444,6 @@ dialog_highlighter_t* window_manager_get_dialog_highlighter(widget_t* widget) {
     return wm->vt->get_dialog_highlighter(widget);
   }
 
-  return RET_NOT_IMPL;
+  return NULL;
 }
 

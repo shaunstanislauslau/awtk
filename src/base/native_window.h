@@ -54,12 +54,13 @@ struct _native_window_t {
 
   void* handle;
   bool_t shared;
-  rect_t dirty_rect;
-  rect_t last_dirty_rect;
-  const native_window_vtable_t* vt;
 
   rect_t rect;
   bool_t dirty;
+  rect_t dirty_rect;
+  rect_t last_dirty_rect;
+  
+  const native_window_vtable_t* vt;
 };
 
 /**
@@ -118,13 +119,14 @@ native_window_t* native_window_create(widget_t* widget);
 ret_t native_window_invalidate(native_window_t* win, rect_t* r);
 
 /*public for window manager only*/
-rect_t native_window_calc_dirty_rect(native_window_t* win);
-ret_t native_window_update_last_dirty_rect(native_window_t* win);
-ret_t native_window_on_resized(native_window_t* win, wh_t w, wh_t h);
-
 ret_t native_window_begin_frame(native_window_t* win, lcd_draw_mode_t mode);
 ret_t native_window_paint(native_window_t* win, widget_t* widget);
 ret_t native_window_end_frame(native_window_t* win);
+
+rect_t native_window_calc_dirty_rect(native_window_t* win);
+ret_t native_window_clear_dirty_rect(native_window_t* win);
+ret_t native_window_update_last_dirty_rect(native_window_t* win);
+ret_t native_window_on_resized(native_window_t* win, wh_t w, wh_t h);
 
 #define NATIVE_WINDOW(win) ((native_window_t*)(win))
 
