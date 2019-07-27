@@ -102,7 +102,6 @@ static const native_window_vtable_t s_native_window_vtable = {
 
 static ret_t native_window_sdl_set_prop(object_t* obj, const char* name, const value_t* v) {
   native_window_t* win = NATIVE_WINDOW(obj);
-  native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
 
   if (tk_str_eq(NATIVE_WINDOW_PROP_SIZE, name)) {
     rect_t* r = (rect_t*)value_pointer(v);
@@ -121,7 +120,6 @@ static ret_t native_window_sdl_set_prop(object_t* obj, const char* name, const v
 
 static ret_t native_window_sdl_get_prop(object_t* obj, const char* name, value_t* v) {
   native_window_t* win = NATIVE_WINDOW(obj);
-  native_window_sdl_t* sdl = NATIVE_WINDOW_SDL(win);
 
   if (tk_str_eq(NATIVE_WINDOW_PROP_SIZE, name) || tk_str_eq(NATIVE_WINDOW_PROP_POSITION, name)) {
     int x = 0;
