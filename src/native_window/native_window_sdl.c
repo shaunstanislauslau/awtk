@@ -260,6 +260,7 @@ ret_t native_window_sdl_init(bool_t shared, uint32_t w, uint32_t h) {
     int32_t x = SDL_WINDOWPOS_UNDEFINED;
     int32_t y = SDL_WINDOWPOS_UNDEFINED;
     s_shared_win = native_window_create_internal(title, 0, x, y, w, h);
+    s_shared_win->shared = TRUE;
   }
 
   return RET_OK;
